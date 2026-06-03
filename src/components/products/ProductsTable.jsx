@@ -1,4 +1,5 @@
 import { Edit, Eye, Trash2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 const statusClasses = {
   Active: 'bg-emerald-50 text-emerald-700',
@@ -68,13 +69,13 @@ function ProductsTable({ products }) {
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex justify-end gap-2">
-                    <button
-                      type="button"
+                    <Link
+                      to={`/products/${product.id}`}
                       className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 focus:outline-none focus:ring-4 focus:ring-emerald-100"
                       aria-label={`View ${product.name}`}
                     >
                       <Eye size={16} />
-                    </button>
+                    </Link>
                     <button
                       type="button"
                       className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-slate-200"

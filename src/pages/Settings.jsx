@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 import {
   Bell,
   Lock,
@@ -6,27 +6,27 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   User,
-} from 'lucide-react'
-import { useDispatch, useSelector } from 'react-redux'
-import { fetchLoggedInUser } from '../features/auth/authSlice'
+} from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchLoggedInUser } from "../features/auth/authSlice";
 
 const settingTabs = [
-  { id: 'profile', label: 'Profile', icon: User },
-  { id: 'security', label: 'Security', icon: Lock },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'preferences', label: 'Preferences', icon: SlidersHorizontal },
-]
+  { id: "profile", label: "Profile", icon: User },
+  { id: "security", label: "Security", icon: Lock },
+  { id: "notifications", label: "Notifications", icon: Bell },
+  { id: "preferences", label: "Preferences", icon: SlidersHorizontal },
+];
 
 function Settings() {
-  const dispatch = useDispatch()
-  const { user, userLoading, userError } = useSelector((state) => state.auth)
-  const [activeTab, setActiveTab] = useState('profile')
+  const dispatch = useDispatch();
+  const { user, userLoading, userError } = useSelector((state) => state.auth);
+  const [activeTab, setActiveTab] = useState("profile");
 
   useEffect(() => {
     if (!user) {
-      dispatch(fetchLoggedInUser())
+      dispatch(fetchLoggedInUser());
     }
-  }, [dispatch, user])
+  }, [dispatch, user]);
 
   return (
     <div className="space-y-6">
@@ -44,8 +44,8 @@ function Settings() {
         <aside className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
           <div className="space-y-1">
             {settingTabs.map((tab) => {
-              const Icon = tab.icon
-              const isActive = activeTab === tab.id
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
 
               return (
                 <button
@@ -54,20 +54,20 @@ function Settings() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-semibold transition ${
                     isActive
-                      ? 'bg-emerald-50 text-emerald-800'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
+                      ? "bg-emerald-50 text-emerald-800"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
                   }`}
                 >
                   <Icon size={19} />
                   {tab.label}
                 </button>
-              )
+              );
             })}
           </div>
         </aside>
 
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          {activeTab === 'profile' && (
+          {activeTab === "profile" && (
             <div>
               <div className="mb-6 flex items-start justify-between gap-4">
                 <div>
@@ -99,6 +99,14 @@ function Settings() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
                     <p className="text-xs font-bold uppercase text-slate-400">
+                      Name
+                    </p>
+                    <p className="mt-2 text-base font-semibold text-slate-900">
+                      {user.name}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
+                    <p className="text-xs font-bold uppercase text-slate-400">
                       Username
                     </p>
                     <p className="mt-2 text-base font-semibold text-slate-900">
@@ -113,13 +121,13 @@ function Settings() {
                       {user.role}
                     </p>
                   </div>
-                  <div className="rounded-lg border border-slate-100 bg-slate-50 p-4 sm:col-span-2">
+                  <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
                     <p className="text-xs font-bold uppercase text-slate-400">
                       Email
                     </p>
-                    <p className="mt-2 flex items-center gap-2 text-base font-semibold text-slate-900">
-                      <Mail size={17} className="text-slate-500" />
-                      {user.email}
+                    <p className="mt-2 flex min-w-0 items-center gap-2 text-base font-semibold text-slate-900">
+                      <Mail size={17} className="shrink-0 text-slate-500" />
+                      <span className="break-all">{user.email}</span>
                     </p>
                   </div>
                   <div className="rounded-lg border border-slate-100 bg-slate-50 p-4 sm:col-span-2">
@@ -135,21 +143,21 @@ function Settings() {
             </div>
           )}
 
-          {activeTab === 'security' && (
+          {activeTab === "security" && (
             <SettingsPlaceholder
               title="Security"
               description="Password changes and access controls can be added here."
             />
           )}
 
-          {activeTab === 'notifications' && (
+          {activeTab === "notifications" && (
             <SettingsPlaceholder
               title="Notifications"
               description="Order, inventory, and low-stock alert preferences can be managed here."
             />
           )}
 
-          {activeTab === 'preferences' && (
+          {activeTab === "preferences" && (
             <SettingsPlaceholder
               title="Preferences"
               description="Dashboard display, timezone, and store preferences can be configured here."
@@ -158,7 +166,7 @@ function Settings() {
         </div>
       </section>
     </div>
-  )
+  );
 }
 
 function SettingsPlaceholder({ title, description }) {
@@ -170,7 +178,7 @@ function SettingsPlaceholder({ title, description }) {
         Settings controls coming soon.
       </div>
     </div>
-  )
+  );
 }
 
-export default Settings
+export default Settings;

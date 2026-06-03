@@ -20,7 +20,9 @@ function ProtectedLayout() {
   const location = useLocation()
   const { token } = useSelector((state) => state.auth)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const pageTitle = pageTitles[location.pathname] || 'Dashboard'
+  const pageTitle =
+    pageTitles[location.pathname] ||
+    (location.pathname.startsWith('/products/') ? 'Product Details' : 'Dashboard')
 
   if (!token) {
     return <Navigate to="/login" replace />

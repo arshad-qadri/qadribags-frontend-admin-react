@@ -5,11 +5,10 @@ import {
   ChevronRight,
   ClipboardList,
   Home,
-  Package,
   Settings,
   ShoppingBag,
   Users,
-  Handbag
+  Handbag,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
