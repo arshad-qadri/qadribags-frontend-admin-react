@@ -9,13 +9,14 @@ import {
   Settings,
   ShoppingBag,
   Users,
+  Handbag
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 const menuItems = [
   { label: 'Dashboard', icon: Home, path: '/' },
   { label: 'Orders', icon: ClipboardList, path: '/orders' },
-  { label: 'Products', icon: ShoppingBag, path: '/products' },
+  { label: 'Products', icon: Handbag, path: '/products' },
   { label: 'Inventory', icon: Boxes, path: '/inventory' },
   { label: 'Customers', icon: Users, path: '/customers' },
   { label: 'Reports', icon: BarChart3, path: '/reports' },
@@ -26,7 +27,7 @@ function Sidebar({ collapsed, onToggle }) {
   return (
     <aside
       className={`fixed inset-y-0 left-0 hidden border-r border-slate-200 bg-white py-6 transition-all duration-300 lg:block ${
-        collapsed ? 'w-24 px-4' : 'w-72 px-5'
+        collapsed ? 'w-24 px-4' : 'w-68 px-5'
       }`}
     >
       <div
@@ -36,7 +37,7 @@ function Sidebar({ collapsed, onToggle }) {
       >
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-lg shadow-emerald-900/15">
-            <Package size={23} strokeWidth={2.4} />
+            <ShoppingBag size={23} strokeWidth={2.4} />
           </div>
           {!collapsed && (
             <div className="min-w-0">

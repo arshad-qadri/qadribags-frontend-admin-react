@@ -35,7 +35,7 @@ function ProtectedLayout() {
 
       <div
         className={`transition-all duration-300 ${
-          sidebarCollapsed ? 'lg:pl-24' : 'lg:pl-72'
+          sidebarCollapsed ? 'lg:pl-24' : 'lg:pl-68'
         }`}
       >
         <Topbar title={pageTitle} onLogout={() => dispatch(logout())} />
