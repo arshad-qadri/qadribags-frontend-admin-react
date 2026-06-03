@@ -14,6 +14,12 @@ function AppRoutes() {
 
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/orders" element={<Dashboard />} />
+          <Route path="/products" element={<Dashboard />} />
+          <Route path="/inventory" element={<Dashboard />} />
+          <Route path="/customers" element={<Dashboard />} />
+          <Route path="/reports" element={<Dashboard />} />
+          <Route path="/settings" element={<Dashboard />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />
