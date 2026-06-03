@@ -1,17 +1,23 @@
 import { useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { Navigate, useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import Button from '../components/common/Button'
 import InputBox from '../components/common/InputBox'
+import { clearAuthError, loginUser } from '../features/auth/authSlice'
 
 const initialForm = {
-  email: '',
+  username: '',
   password: '',
   remember: false,
 }
 
 function Login() {
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const { token, loading } = useSelector((state) => state.auth)
   const [formData, setFormData] = useState(initialForm)
   const [errors, setErrors] = useState({})
-  const [loading, setLoading] = useState(false)
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target
@@ -30,8 +36,8 @@ function Login() {
   const validateForm = () => {
     const nextErrors = {}
 
-    if (!formData.email.trim()) {
-      nextErrors.email = 'Email is required'
+    if (!formData.username.trim()) {
+      nextErrors.username = 'Username is required'
     }
 
     if (!formData.password) {
@@ -44,17 +50,32 @@ function Login() {
     return Object.keys(nextErrors).length === 0
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
     if (!validateForm()) {
       return
     }
 
-    setLoading(true)
-    window.setTimeout(() => {
-      setLoading(false)
-    }, 700)
+    const result = await dispatch(
+      loginUser({
+        username: formData.username,
+        password: formData.password,
+      }),
+    )
+
+    if (loginUser.fulfilled.match(result)) {
+      toast.success(result.payload?.message || 'Login successfully')
+      navigate('/', { replace: true })
+      return
+    }
+
+    toast.error(result.payload || 'Invalid credentials')
+    dispatch(clearAuthError())
+  }
+
+  if (token) {
+    return <Navigate to="/" replace />
   }
 
   return (
@@ -74,13 +95,13 @@ function Login() {
 
         <form className="space-y-5" onSubmit={handleSubmit}>
           <InputBox
-            label="Email"
-            type="email"
-            name="email"
-            value={formData.email}
+            label="Username"
+            type="text"
+            name="username"
+            value={formData.username}
             onChange={handleChange}
-            placeholder="admin@qadribags.com"
-            error={errors.email}
+            placeholder="Enter your username"
+            error={errors.username}
           />
 
           <InputBox
