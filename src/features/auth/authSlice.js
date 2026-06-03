@@ -21,10 +21,28 @@ export const loginUser = createAsyncThunk(
   },
 )
 
+export const fetchLoggedInUser = createAsyncThunk(
+  'auth/fetchLoggedInUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosClient.get('/users/user')
+
+      return response.data
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Unable to fetch user details.',
+      )
+    }
+  },
+)
+
 const initialState = {
   token: localStorage.getItem(tokenKey),
+  user: null,
   loading: false,
+  userLoading: false,
   error: null,
+  userError: null,
 }
 
 const authSlice = createSlice({
@@ -33,7 +51,9 @@ const authSlice = createSlice({
   reducers: {
     logout: (state) => {
       state.token = null
+      state.user = null
       state.error = null
+      state.userError = null
       localStorage.removeItem(tokenKey)
     },
     clearAuthError: (state) => {
@@ -59,6 +79,18 @@ const authSlice = createSlice({
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
+      })
+      .addCase(fetchLoggedInUser.pending, (state) => {
+        state.userLoading = true
+        state.userError = null
+      })
+      .addCase(fetchLoggedInUser.fulfilled, (state, action) => {
+        state.userLoading = false
+        state.user = action.payload?.data || null
+      })
+      .addCase(fetchLoggedInUser.rejected, (state, action) => {
+        state.userLoading = false
+        state.userError = action.payload
       })
   },
 })
