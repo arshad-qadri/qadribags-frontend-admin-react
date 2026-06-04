@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 
 const statusClasses = {
   Active: 'bg-emerald-50 text-emerald-700',
+  Inactive: 'bg-slate-100 text-slate-600',
   Draft: 'bg-slate-100 text-slate-600',
   'Low Stock': 'bg-amber-50 text-amber-700',
 }
@@ -76,14 +77,14 @@ function ProductsTable({ products }) {
                 <td className="px-5 py-4">
                   <div className="flex justify-end gap-2">
                     <Link
-                      to={`/products/${product.id}`}
+                      to={`/products/${product.sku}`}
                       className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 focus:outline-none focus:ring-4 focus:ring-emerald-100"
                       aria-label={`View ${product.name}`}
                     >
                       <Eye size={16} />
                     </Link>
                     <Link
-                      to={`/products/${product.id}/edit`}
+                      to={`/products/${product.sku}/edit`}
                       className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-slate-200"
                       aria-label={`Edit ${product.name}`}
                     >

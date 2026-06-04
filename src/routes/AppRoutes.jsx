@@ -20,9 +20,9 @@ function AppRoutes() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/orders" element={<Dashboard />} />
           <Route path="/products" element={<Products />} />
-          <Route path="/products/:productId" element={<ProductView />} />
-          <Route path="/products/:productId/edit" element={<ProductEdit />} />
-          <Route path="/products/:productId/images" element={<ProductImages />} />
+          <Route path="/products/:productSku" element={<ProductView />} />
+          <Route path="/products/:productSku/edit" element={<ProductEdit />} />
+          <Route path="/products/:productSku/images" element={<ProductImages />} />
           <Route path="/inventory" element={<Dashboard />} />
           <Route path="/customers" element={<Dashboard />} />
           <Route path="/reports" element={<Dashboard />} />

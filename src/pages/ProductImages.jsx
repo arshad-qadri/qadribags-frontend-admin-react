@@ -1,20 +1,39 @@
 import { ArrowLeft, ImagePlus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import {
-  addProductImage,
-  deleteProductImage,
-  getProductById,
-} from '../data/products'
+  addProductImageLocally,
+  deleteProductImageLocally,
+  fetchProductBySku,
+  selectProductBySku,
+  selectProductsLoading,
+} from '../features/products/productsSlice'
 
 function ProductImages() {
-  const { productId } = useParams()
-  const [product, setProduct] = useState(() => getProductById(productId))
+  const { productSku } = useParams()
+  const dispatch = useDispatch()
+  const loading = useSelector(selectProductsLoading)
+  const product = useSelector((state) => selectProductBySku(state, productSku))
   const [isUploading, setIsUploading] = useState(false)
 
+  useEffect(() => {
+    if (productSku) {
+      dispatch(fetchProductBySku(productSku))
+    }
+  }, [dispatch, productSku])
+
+  if (loading && !product) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm font-medium text-slate-500 shadow-sm">
+        Loading product images...
+      </div>
+    )
+  }
+
   if (!product) {
-    return <Navigate to="/products" replace />
+    return loading ? null : <Navigate to="/products" replace />
   }
 
   const handleUpload = async ({ target }) => {
@@ -28,14 +47,15 @@ function ProductImages() {
 
     try {
       const imageSource = await readFileAsDataUrl(file)
-      const nextProduct = addProductImage(productId, imageSource)
-
-      if (!nextProduct) {
-        toast.error('Unable to upload image')
-        return
-      }
-
-      setProduct(nextProduct)
+      dispatch(
+        addProductImageLocally({
+          productId: product.id,
+          image: {
+            publicId: `${product.id}-${Date.now()}`,
+            url: imageSource,
+          },
+        }),
+      )
       toast.success('Product image uploaded')
     } catch {
       toast.error('Image upload failed')
@@ -46,14 +66,7 @@ function ProductImages() {
   }
 
   const handleDelete = (imageIndex) => {
-    const nextProduct = deleteProductImage(productId, imageIndex)
-
-    if (!nextProduct) {
-      toast.error('Unable to delete image')
-      return
-    }
-
-    setProduct(nextProduct)
+    dispatch(deleteProductImageLocally({ productId: product.id, imageIndex }))
     toast.success('Product image deleted')
   }
 
@@ -62,7 +75,7 @@ function ProductImages() {
       <section className="flex flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm xl:flex-row xl:items-center">
         <div>
           <Link
-            to={`/products/${productId}`}
+            to={`/products/${productSku}`}
             className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-emerald-700"
           >
             <ArrowLeft size={17} />
@@ -77,7 +90,7 @@ function ProductImages() {
           </p>
         </div>
         <Link
-          to={`/products/${productId}/edit`}
+          to={`/products/${productSku}/edit`}
           className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-200"
         >
           Product Details
@@ -119,14 +132,14 @@ function ProductImages() {
           </div>
         ) : (
           <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {product.images.map((imageSource, index) => (
+            {product.images.map((image, index) => (
               <article
                 key={`${product.id}-${index}`}
                 className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
               >
                 <div className="relative">
                   <img
-                    src={imageSource}
+                    src={image.url}
                     alt={`${product.name} ${index + 1}`}
                     className="aspect-[4/3] w-full object-cover"
                   />

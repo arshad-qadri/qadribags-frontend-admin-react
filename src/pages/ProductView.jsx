@@ -7,22 +7,45 @@ import {
   PackageCheck,
   Tag,
 } from 'lucide-react'
+import { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import StatCard from '../components/common/StatCard'
-import { getProductById } from '../data/products'
+import {
+  fetchProductBySku,
+  selectProductBySku,
+  selectProductsLoading,
+} from '../features/products/productsSlice'
 
 const statusClasses = {
   Active: 'bg-emerald-50 text-emerald-700',
+  Inactive: 'bg-slate-100 text-slate-600',
   Draft: 'bg-slate-100 text-slate-600',
   'Low Stock': 'bg-amber-50 text-amber-700',
 }
 
 function ProductView() {
-  const { productId } = useParams()
-  const product = getProductById(productId)
+  const { productSku } = useParams()
+  const dispatch = useDispatch()
+  const loading = useSelector(selectProductsLoading)
+  const product = useSelector((state) => selectProductBySku(state, productSku))
+
+  useEffect(() => {
+    if (productSku) {
+      dispatch(fetchProductBySku(productSku))
+    }
+  }, [dispatch, productSku])
+
+  if (loading && !product) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm font-medium text-slate-500 shadow-sm">
+        Loading product details...
+      </div>
+    )
+  }
 
   if (!product) {
-    return <Navigate to="/products" replace />
+    return loading ? null : <Navigate to="/products" replace />
   }
 
   const productStats = [
@@ -67,14 +90,14 @@ function ProductView() {
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
-            to={`/products/${productId}/images`}
+            to={`/products/${productSku}/images`}
             className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-200"
           >
             <Images size={17} />
             Edit Images
           </Link>
           <Link
-            to={`/products/${productId}/edit`}
+            to={`/products/${productSku}/edit`}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-emerald-900/20 transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-200"
           >
             <Edit size={17} />

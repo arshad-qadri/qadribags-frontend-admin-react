@@ -1,40 +1,65 @@
 import { ArrowLeft, ImagePlus, Save } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/common/Button'
 import InputBox from '../components/common/InputBox'
-import { getProductById, updateProduct } from '../data/products'
+import {
+  fetchProductBySku,
+  selectProductBySku,
+  selectProductsLoading,
+  updateProductLocally,
+} from '../features/products/productsSlice'
 
 const statusOptions = ['Active', 'Draft', 'Low Stock']
 
 function ProductEdit() {
-  const { productId } = useParams()
-  const navigate = useNavigate()
-  const product = getProductById(productId)
+  const { productSku } = useParams()
+  const dispatch = useDispatch()
+  const loading = useSelector(selectProductsLoading)
+  const product = useSelector((state) => selectProductBySku(state, productSku))
 
-  const [formData, setFormData] = useState(() =>
-    product
-      ? {
-          name: product.name,
-          category: product.category,
-          sku: product.sku,
-          price: product.price,
-          stock: String(product.stock),
-          status: product.status,
-          description: product.description,
-          material: product.material,
-          color: product.color,
-          weight: product.weight,
-          dimensions: product.dimensions,
-          supplier: product.supplier,
-        }
-      : null
-  )
+  useEffect(() => {
+    if (productSku) {
+      dispatch(fetchProductBySku(productSku))
+    }
+  }, [dispatch, productSku])
 
-  if (!product || !formData) {
-    return <Navigate to="/products" replace />
+  if (loading && !product) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm font-medium text-slate-500 shadow-sm">
+        Loading product...
+      </div>
+    )
   }
+
+  if (!product) {
+    return loading ? null : <Navigate to="/products" replace />
+  }
+
+  return (
+    <ProductEditForm key={product.id} product={product} productSku={productSku} />
+  )
+}
+
+function ProductEditForm({ product, productSku }) {
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const [formData, setFormData] = useState(() => ({
+    name: product.name,
+    category: product.category,
+    sku: product.sku,
+    price: product.price,
+    stock: String(product.stock),
+    status: product.status,
+    description: product.description,
+    material: product.material,
+    color: product.color,
+    weight: product.weight,
+    dimensions: product.dimensions,
+    supplier: product.supplier,
+  }))
 
   const handleChange = ({ target }) => {
     const { name, value } = target
@@ -44,21 +69,32 @@ function ProductEdit() {
   const handleSubmit = (event) => {
     event.preventDefault()
 
-    const nextProduct = updateProduct(productId, {
-      ...formData,
-      stock: Number(formData.stock) || 0,
-    })
+    dispatch(
+      updateProductLocally({
+        productId: product.id,
+        updatedFields: {
+          ...formData,
+          priceValue: Number(
+            String(formData.price).replace(/[^\d.]/g, ''),
+          ) || 0,
+          stock: Number(formData.stock) || 0,
+        },
+      }),
+    )
 
-    toast.success(`${nextProduct.name} updated successfully`)
-    navigate(`/products/${productId}`)
+    const nextProductName = formData.name
+    toast.success(`${nextProductName} updated successfully`)
+    navigate(`/products/${productSku}`)
   }
+
+  const currentImage = product.image
 
   return (
     <div className="space-y-6">
       <section className="flex flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm xl:flex-row xl:items-center">
         <div>
           <Link
-            to={`/products/${productId}`}
+            to={`/products/${productSku}`}
             className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-emerald-700"
           >
             <ArrowLeft size={17} />
@@ -73,9 +109,9 @@ function ProductEdit() {
           </p>
         </div>
         <div className="rounded-2xl border border-emerald-100 bg-linear-to-br from-emerald-50 to-white p-3 shadow-sm">
-          {product.image ? (
+          {currentImage ? (
             <img
-              src={product.image}
+              src={currentImage}
               alt={formData.name}
               className="h-24 w-24 rounded-xl object-cover"
             />
@@ -180,7 +216,7 @@ function ProductEdit() {
                   thumbnail assets.
                 </p>
                 <Link
-                  to={`/products/${productId}/images`}
+                  to={`/products/${productSku}/images`}
                   className="mt-4 inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-slate-200 transition hover:bg-emerald-50"
                 >
                   Open Image Manager
@@ -198,7 +234,7 @@ function ProductEdit() {
                 name="color"
                 value={formData.color}
                 onChange={handleChange}
-                placeholder="Navy Blue"
+                placeholder="Black, Navy Blue"
               />
               <InputBox
                 label="Weight"
@@ -231,7 +267,7 @@ function ProductEdit() {
                 <span className="ml-2">Save Changes</span>
               </Button>
               <Link
-                to={`/products/${productId}`}
+                to={`/products/${productSku}`}
                 className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-200"
               >
                 Cancel

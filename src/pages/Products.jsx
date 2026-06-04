@@ -1,42 +1,83 @@
+import { useEffect, useState } from 'react'
 import { Filter, PackagePlus, Search } from 'lucide-react'
+import { useDispatch, useSelector } from 'react-redux'
 import StatCard from '../components/common/StatCard'
 import { AlertTriangle, Boxes, IndianRupee, ShoppingBag } from 'lucide-react'
 import ProductsTable from '../components/products/ProductsTable'
-import { getProducts } from '../data/products'
-
-const productStats = [
-  {
-    label: 'Total Products',
-    value: '248',
-    change: '+14 added',
-    icon: ShoppingBag,
-    tone: 'emerald',
-  },
-  {
-    label: 'Available Stock',
-    value: '1,842',
-    change: '94% stocked',
-    icon: Boxes,
-    tone: 'blue',
-  },
-  {
-    label: 'Low Stock',
-    value: '8',
-    change: 'Needs reorder',
-    icon: AlertTriangle,
-    tone: 'amber',
-  },
-  {
-    label: 'Catalog Value',
-    value: 'Rs 12.6L',
-    change: '+9.3%',
-    icon: IndianRupee,
-    tone: 'violet',
-  },
-]
+import {
+  fetchProducts,
+  selectProducts,
+  selectProductsError,
+  selectProductsLoaded,
+  selectProductsLoading,
+} from '../features/products/productsSlice'
 
 function Products() {
-  const products = getProducts()
+  const dispatch = useDispatch()
+  const products = useSelector(selectProducts)
+  const loading = useSelector(selectProductsLoading)
+  const loaded = useSelector(selectProductsLoaded)
+  const error = useSelector(selectProductsError)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    if (!loaded) {
+      dispatch(fetchProducts())
+    }
+  }, [dispatch, loaded])
+
+  const filteredProducts = products.filter((product) => {
+    const query = searchTerm.trim().toLowerCase()
+
+    if (!query) {
+      return true
+    }
+
+    return (
+      product.name.toLowerCase().includes(query) ||
+      product.sku.toLowerCase().includes(query) ||
+      product.category.toLowerCase().includes(query)
+    )
+  })
+
+  const totalStock = products.reduce((sum, product) => sum + product.stock, 0)
+  const lowStockCount = products.filter((product) => product.stock <= 10).length
+  const activeCount = products.filter((product) => product.status === 'Active').length
+  const totalCatalogValue = products.reduce(
+    (sum, product) => sum + product.priceValue * product.stock,
+    0,
+  )
+
+  const productStats = [
+    {
+      label: 'Total Products',
+      value: String(products.length),
+      change: `${activeCount} active products`,
+      icon: ShoppingBag,
+      tone: 'emerald',
+    },
+    {
+      label: 'Available Stock',
+      value: totalStock.toLocaleString('en-IN'),
+      change: `${filteredProducts.length} products visible`,
+      icon: Boxes,
+      tone: 'blue',
+    },
+    {
+      label: 'Low Stock',
+      value: String(lowStockCount),
+      change: 'Products at or below 10 units',
+      icon: AlertTriangle,
+      tone: 'amber',
+    },
+    {
+      label: 'Catalog Value',
+      value: `Rs ${totalCatalogValue.toLocaleString('en-IN')}`,
+      change: 'Based on current stock x price',
+      icon: IndianRupee,
+      tone: 'violet',
+    },
+  ]
 
   return (
     <div className="space-y-6">
@@ -75,6 +116,8 @@ function Products() {
             <input
               type="search"
               placeholder="Search products, SKU, category"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
               className="w-full rounded-lg border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
             />
           </div>
@@ -88,7 +131,17 @@ function Products() {
         </div>
       </section>
 
-      <ProductsTable products={products} />
+      {loading ? (
+        <section className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm font-medium text-slate-500 shadow-sm">
+          Loading products...
+        </section>
+      ) : error ? (
+        <section className="rounded-xl border border-red-200 bg-red-50 p-8 text-center text-sm font-medium text-red-700 shadow-sm">
+          {error}
+        </section>
+      ) : (
+        <ProductsTable products={filteredProducts} />
+      )}
     </div>
   )
 }
