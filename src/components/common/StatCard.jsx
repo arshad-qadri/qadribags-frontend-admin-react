@@ -9,20 +9,22 @@ const toneClasses = {
 
 function StatCard({ label, value, change, icon: Icon, tone = 'emerald' }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between">
-        <div>
+    <div className="flex h-full min-w-0 flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex min-w-0 items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-slate-500">{label}</p>
-          <p className="mt-3 text-3xl font-bold text-slate-950">{value}</p>
+          <p className="mt-3 break-words text-xl leading-tight font-bold text-slate-950">
+            {value}
+          </p>
         </div>
-        <div className={`rounded-lg p-3 ${toneClasses[tone]}`}>
+        <div className={`shrink-0 rounded-lg p-3 ${toneClasses[tone]}`}>
           <Icon size={22} />
         </div>
       </div>
-      <p className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-emerald-700">
-        <TrendingUp size={15} />
-        {change}
-      </p>
+      <div className="mt-4 flex min-w-0 items-start gap-1 text-sm font-semibold text-emerald-700">
+        <TrendingUp size={15} className="mt-0.5 shrink-0" />
+        <p className="min-w-0 break-words">{change}</p>
+      </div>
     </div>
   )
 }

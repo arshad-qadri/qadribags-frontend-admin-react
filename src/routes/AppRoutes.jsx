@@ -3,6 +3,8 @@ import ProtectedLayout from '../layouts/ProtectedLayout'
 import PublicLayout from '../layouts/PublicLayout'
 import Dashboard from '../pages/Dashboard'
 import Login from '../pages/Login'
+import ProductEdit from '../pages/ProductEdit'
+import ProductImages from '../pages/ProductImages'
 import Products from '../pages/Products'
 import ProductView from '../pages/ProductView'
 import Settings from '../pages/Settings'
@@ -19,6 +21,8 @@ function AppRoutes() {
           <Route path="/orders" element={<Dashboard />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/:productId" element={<ProductView />} />
+          <Route path="/products/:productId/edit" element={<ProductEdit />} />
+          <Route path="/products/:productId/images" element={<ProductImages />} />
           <Route path="/inventory" element={<Dashboard />} />
           <Route path="/customers" element={<Dashboard />} />
           <Route path="/reports" element={<Dashboard />} />

@@ -2,7 +2,7 @@ import { Filter, PackagePlus, Search } from 'lucide-react'
 import StatCard from '../components/common/StatCard'
 import { AlertTriangle, Boxes, IndianRupee, ShoppingBag } from 'lucide-react'
 import ProductsTable from '../components/products/ProductsTable'
-import { products } from '../data/products'
+import { getProducts } from '../data/products'
 
 const productStats = [
   {
@@ -36,6 +36,8 @@ const productStats = [
 ]
 
 function Products() {
+  const products = getProducts()
+
   return (
     <div className="space-y-6">
       <section className="flex flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm xl:flex-row xl:items-center">

@@ -3,12 +3,13 @@ import {
   BadgeIndianRupee,
   Boxes,
   Edit,
+  Images,
   PackageCheck,
   Tag,
 } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import StatCard from '../components/common/StatCard'
-import { products } from '../data/products'
+import { getProductById } from '../data/products'
 
 const statusClasses = {
   Active: 'bg-emerald-50 text-emerald-700',
@@ -18,7 +19,7 @@ const statusClasses = {
 
 function ProductView() {
   const { productId } = useParams()
-  const product = products.find((item) => item.id === Number(productId))
+  const product = getProductById(productId)
 
   if (!product) {
     return <Navigate to="/products" replace />
@@ -64,22 +65,37 @@ function ProductView() {
           </h2>
           <p className="mt-2 text-sm text-slate-500">{product.description}</p>
         </div>
-        <button
-          type="button"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-emerald-900/20 transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-200"
-        >
-          <Edit size={17} />
-          Edit Product
-        </button>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Link
+            to={`/products/${productId}/images`}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-200"
+          >
+            <Images size={17} />
+            Edit Images
+          </Link>
+          <Link
+            to={`/products/${productId}/edit`}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-emerald-900/20 transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-200"
+          >
+            <Edit size={17} />
+            Edit Product
+          </Link>
+        </div>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[420px_1fr]">
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <img
-            src={product.image}
-            alt={product.name}
-            className="aspect-[4/3] w-full object-cover"
-          />
+          {product.image ? (
+            <img
+              src={product.image}
+              alt={product.name}
+              className="aspect-[4/3] w-full object-cover"
+            />
+          ) : (
+            <div className="flex aspect-[4/3] items-center justify-center bg-slate-100 text-sm font-semibold text-slate-500">
+              No product image
+            </div>
+          )}
           <div className="p-5">
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -102,7 +118,7 @@ function ProductView() {
         </div>
 
         <div className="space-y-6">
-          <section className="grid gap-4 md:grid-cols-3">
+          <section className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
             {productStats.map((stat) => (
               <StatCard key={stat.label} {...stat} />
             ))}

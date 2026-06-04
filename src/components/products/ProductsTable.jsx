@@ -28,11 +28,17 @@ function ProductsTable({ products }) {
               <tr key={product.id} className="bg-white hover:bg-slate-50">
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-4">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="h-16 w-16 rounded-lg object-cover"
-                    />
+                    {product.image ? (
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="h-16 w-16 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-slate-100 text-center text-[11px] font-semibold text-slate-500">
+                        No image
+                      </div>
+                    )}
                     <div>
                       <p className="font-bold text-slate-950">
                         {product.name}
@@ -76,13 +82,13 @@ function ProductsTable({ products }) {
                     >
                       <Eye size={16} />
                     </Link>
-                    <button
-                      type="button"
+                    <Link
+                      to={`/products/${product.id}/edit`}
                       className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-slate-200"
                       aria-label={`Edit ${product.name}`}
                     >
                       <Edit size={16} />
-                    </button>
+                    </Link>
                     <button
                       type="button"
                       className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 focus:outline-none focus:ring-4 focus:ring-red-100"
