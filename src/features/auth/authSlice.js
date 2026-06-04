@@ -1,7 +1,10 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import axiosClient from '../../api/axiosClient'
-
-const tokenKey = 'access_token'
+import {
+  clearStoredToken,
+  getStoredToken,
+  setStoredToken,
+} from './authSession'
 
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
@@ -37,7 +40,7 @@ export const fetchLoggedInUser = createAsyncThunk(
 )
 
 const initialState = {
-  token: localStorage.getItem(tokenKey),
+  token: getStoredToken(),
   user: null,
   loading: false,
   userLoading: false,
@@ -54,7 +57,7 @@ const authSlice = createSlice({
       state.user = null
       state.error = null
       state.userError = null
-      localStorage.removeItem(tokenKey)
+      clearStoredToken()
     },
     clearAuthError: (state) => {
       state.error = null
@@ -73,7 +76,7 @@ const authSlice = createSlice({
         state.token = token
 
         if (token) {
-          localStorage.setItem(tokenKey, token)
+          setStoredToken(token)
         }
       })
       .addCase(loginUser.rejected, (state, action) => {

@@ -33,6 +33,26 @@ function formatWeight(weight) {
   return `${weight} g`
 }
 
+function parseNumber(value) {
+  if (typeof value === 'number') {
+    return value
+  }
+
+  const normalizedValue = String(value ?? '').replace(/[^\d.]/g, '')
+  return Number(normalizedValue) || 0
+}
+
+function parseColors(value) {
+  if (Array.isArray(value)) {
+    return value
+  }
+
+  return String(value ?? '')
+    .split(',')
+    .map((color) => color.trim())
+    .filter(Boolean)
+}
+
 function normalizeImage(image) {
   if (typeof image === 'string') {
     return { publicId: image, url: image }
@@ -145,6 +165,33 @@ export const uploadProductImage = createAsyncThunk(
   },
 )
 
+export const updateProduct = createAsyncThunk(
+  'products/updateProduct',
+  async ({ sku, productData }, { dispatch, rejectWithValue }) => {
+    try {
+      await axiosClient.patch(`/products/update/${sku}`, {
+        name: productData.name,
+        description: productData.description,
+        category: productData.category,
+        material: productData.material,
+        colors: parseColors(productData.color),
+        weight: parseNumber(productData.weight),
+        dimensions: productData.dimensions,
+        supplier: productData.supplier,
+        price: parseNumber(productData.price),
+        stock: parseNumber(productData.stock),
+      })
+
+      const refreshedProduct = await dispatch(fetchProductBySku(sku)).unwrap()
+      return refreshedProduct
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Unable to update product.',
+      )
+    }
+  },
+)
+
 const initialState = {
   items: [],
   loading: false,
@@ -153,6 +200,7 @@ const initialState = {
   error: null,
   statusUpdating: false,
   imageUploading: false,
+  updating: false,
 }
 
 const productsSlice = createSlice({
@@ -261,6 +309,17 @@ const productsSlice = createSlice({
         state.imageUploading = false
         state.error = action.payload
       })
+      .addCase(updateProduct.pending, (state) => {
+        state.updating = true
+        state.error = null
+      })
+      .addCase(updateProduct.fulfilled, (state) => {
+        state.updating = false
+      })
+      .addCase(updateProduct.rejected, (state, action) => {
+        state.updating = false
+        state.error = action.payload
+      })
   },
 })
 
@@ -279,6 +338,7 @@ export const selectProductStatusUpdating = (state) =>
   state.products.statusUpdating
 export const selectProductImageUploading = (state) =>
   state.products.imageUploading
+export const selectProductUpdating = (state) => state.products.updating
 export const selectProductById = (state, productId) =>
   state.products.items.find((product) => product.id === productId)
 export const selectProductBySku = (state, productSku) =>

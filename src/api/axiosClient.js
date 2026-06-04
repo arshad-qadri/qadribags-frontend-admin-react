@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { clearSessionAndRedirect, getStoredToken } from '../features/auth/authSession'
 
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -8,7 +9,7 @@ const axiosClient = axios.create({
 })
 
 axiosClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token')
+  const token = getStoredToken()
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -16,5 +17,18 @@ axiosClient.interceptors.request.use((config) => {
 
   return config
 })
+
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const statusCode = error.response?.status
+
+    if (statusCode === 401 || statusCode === 403) {
+      clearSessionAndRedirect()
+    }
+
+    return Promise.reject(error)
+  },
+)
 
 export default axiosClient

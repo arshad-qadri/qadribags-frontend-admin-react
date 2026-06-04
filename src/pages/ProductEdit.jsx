@@ -9,9 +9,10 @@ import {
   fetchProductBySku,
   selectProductLoading,
   selectProductStatusUpdating,
+  selectProductUpdating,
   selectProductBySku,
   toggleProductStatus,
-  updateProductLocally,
+  updateProduct,
 } from '../features/products/productsSlice'
 
 function ProductEdit() {
@@ -19,6 +20,7 @@ function ProductEdit() {
   const dispatch = useDispatch()
   const loading = useSelector(selectProductLoading)
   const statusUpdating = useSelector(selectProductStatusUpdating)
+  const updating = useSelector(selectProductUpdating)
   const product = useSelector((state) => selectProductBySku(state, productSku))
 
   useEffect(() => {
@@ -45,11 +47,12 @@ function ProductEdit() {
       product={product}
       productSku={productSku}
       statusUpdating={statusUpdating}
+      updating={updating}
     />
   )
 }
 
-function ProductEditForm({ product, productSku, statusUpdating }) {
+function ProductEditForm({ product, productSku, statusUpdating, updating }) {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [formData, setFormData] = useState(() => ({
@@ -75,21 +78,19 @@ function ProductEditForm({ product, productSku, statusUpdating }) {
     event.preventDefault()
 
     dispatch(
-      updateProductLocally({
-        productId: product.id,
-        updatedFields: {
-          ...formData,
-          priceValue: Number(
-            String(formData.price).replace(/[^\d.]/g, ''),
-          ) || 0,
-          stock: Number(formData.stock) || 0,
-        },
+      updateProduct({
+        sku: productSku,
+        productData: formData,
       }),
     )
-
-    const nextProductName = formData.name
-    toast.success(`${nextProductName} updated successfully`)
-    navigate(`/products/${productSku}`)
+      .unwrap()
+      .then(() => {
+        toast.success(`${formData.name} updated successfully`)
+        navigate(`/products/${productSku}`)
+      })
+      .catch((error) => {
+        toast.error(error || 'Unable to update product')
+      })
   }
 
   const handleStatusToggle = async () => {
@@ -315,7 +316,12 @@ function ProductEditForm({ product, productSku, statusUpdating }) {
 
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button type="submit" className="sm:w-auto sm:px-6">
+              <Button
+                type="submit"
+                loading={updating}
+                loadingText="Saving..."
+                className="sm:w-auto sm:px-6"
+              >
                 <Save size={17} />
                 <span className="ml-2">Save Changes</span>
               </Button>

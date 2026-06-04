@@ -10,6 +10,7 @@ import {
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import ImageSlider from '../components/common/ImageSlider'
 import StatCard from '../components/common/StatCard'
 import {
   fetchProductBySku,
@@ -108,17 +109,11 @@ function ProductView() {
 
       <section className="grid gap-6 xl:grid-cols-[420px_1fr]">
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          {product.image ? (
-            <img
-              src={product.image}
-              alt={product.name}
-              className="aspect-[4/3] w-full object-cover"
-            />
-          ) : (
-            <div className="flex aspect-[4/3] items-center justify-center bg-slate-100 text-sm font-semibold text-slate-500">
-              No product image
-            </div>
-          )}
+          <ImageSlider
+            images={product.images}
+            altBase={product.name}
+            emptyLabel="No product image"
+          />
           <div className="p-5">
             <div className="flex items-center justify-between gap-4">
               <div>

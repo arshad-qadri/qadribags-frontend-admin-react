@@ -4,6 +4,7 @@ function Button({
   onClick,
   disabled = false,
   loading = false,
+  loadingText = 'Loading...',
   className = '',
 }) {
   const isDisabled = disabled || loading
@@ -18,7 +19,7 @@ function Button({
       {loading && (
         <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
       )}
-      {loading ? 'Signing in...' : children}
+      {loading ? loadingText : children}
     </button>
   )
 }
