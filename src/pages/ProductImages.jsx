@@ -1,22 +1,22 @@
 import { ArrowLeft, ImagePlus, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import {
-  addProductImageLocally,
-  deleteProductImageLocally,
   fetchProductBySku,
+  selectProductImageUploading,
+  selectProductLoading,
   selectProductBySku,
-  selectProductsLoading,
+  uploadProductImage,
 } from '../features/products/productsSlice'
 
 function ProductImages() {
   const { productSku } = useParams()
   const dispatch = useDispatch()
-  const loading = useSelector(selectProductsLoading)
+  const loading = useSelector(selectProductLoading)
+  const imageUploading = useSelector(selectProductImageUploading)
   const product = useSelector((state) => selectProductBySku(state, productSku))
-  const [isUploading, setIsUploading] = useState(false)
 
   useEffect(() => {
     if (productSku) {
@@ -33,7 +33,7 @@ function ProductImages() {
   }
 
   if (!product) {
-    return loading ? null : <Navigate to="/products" replace />
+    return <Navigate to="/products" replace />
   }
 
   const handleUpload = async ({ target }) => {
@@ -43,31 +43,23 @@ function ProductImages() {
       return
     }
 
-    setIsUploading(true)
-
     try {
-      const imageSource = await readFileAsDataUrl(file)
-      dispatch(
-        addProductImageLocally({
-          productId: product.id,
-          image: {
-            publicId: `${product.id}-${Date.now()}`,
-            url: imageSource,
-          },
+      await dispatch(
+        uploadProductImage({
+          sku: productSku,
+          imageFile: file,
         }),
-      )
+      ).unwrap()
       toast.success('Product image uploaded')
-    } catch {
-      toast.error('Image upload failed')
+    } catch (error) {
+      toast.error(error || 'Image upload failed')
     } finally {
       target.value = ''
-      setIsUploading(false)
     }
   }
 
-  const handleDelete = (imageIndex) => {
-    dispatch(deleteProductImageLocally({ productId: product.id, imageIndex }))
-    toast.success('Product image deleted')
+  const handleDelete = () => {
+    toast.info('Delete image API is not integrated yet.')
   }
 
   return (
@@ -110,12 +102,12 @@ function ProductImages() {
 
           <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-emerald-900/20 transition hover:bg-emerald-800 focus-within:ring-4 focus-within:ring-emerald-200">
             <ImagePlus size={18} />
-            {isUploading ? 'Uploading...' : 'Upload New Image'}
+            {imageUploading ? 'Uploading...' : 'Upload New Image'}
             <input
               type="file"
               accept="image/*"
               onChange={handleUpload}
-              disabled={isUploading}
+              disabled={imageUploading}
               className="sr-only"
             />
           </label>
@@ -175,16 +167,6 @@ function ProductImages() {
       </section>
     </div>
   )
-}
-
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-
-    reader.onload = () => resolve(String(reader.result))
-    reader.onerror = () => reject(new Error('Failed to read file'))
-    reader.readAsDataURL(file)
-  })
 }
 
 export default ProductImages

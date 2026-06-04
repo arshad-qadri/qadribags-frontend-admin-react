@@ -13,8 +13,8 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import StatCard from '../components/common/StatCard'
 import {
   fetchProductBySku,
+  selectProductLoading,
   selectProductBySku,
-  selectProductsLoading,
 } from '../features/products/productsSlice'
 
 const statusClasses = {
@@ -27,7 +27,7 @@ const statusClasses = {
 function ProductView() {
   const { productSku } = useParams()
   const dispatch = useDispatch()
-  const loading = useSelector(selectProductsLoading)
+  const loading = useSelector(selectProductLoading)
   const product = useSelector((state) => selectProductBySku(state, productSku))
 
   useEffect(() => {
@@ -45,7 +45,7 @@ function ProductView() {
   }
 
   if (!product) {
-    return loading ? null : <Navigate to="/products" replace />
+    return <Navigate to="/products" replace />
   }
 
   const productStats = [

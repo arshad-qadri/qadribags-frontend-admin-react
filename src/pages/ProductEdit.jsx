@@ -7,17 +7,18 @@ import Button from '../components/common/Button'
 import InputBox from '../components/common/InputBox'
 import {
   fetchProductBySku,
+  selectProductLoading,
+  selectProductStatusUpdating,
   selectProductBySku,
-  selectProductsLoading,
+  toggleProductStatus,
   updateProductLocally,
 } from '../features/products/productsSlice'
-
-const statusOptions = ['Active', 'Draft', 'Low Stock']
 
 function ProductEdit() {
   const { productSku } = useParams()
   const dispatch = useDispatch()
-  const loading = useSelector(selectProductsLoading)
+  const loading = useSelector(selectProductLoading)
+  const statusUpdating = useSelector(selectProductStatusUpdating)
   const product = useSelector((state) => selectProductBySku(state, productSku))
 
   useEffect(() => {
@@ -35,15 +36,20 @@ function ProductEdit() {
   }
 
   if (!product) {
-    return loading ? null : <Navigate to="/products" replace />
+    return <Navigate to="/products" replace />
   }
 
   return (
-    <ProductEditForm key={product.id} product={product} productSku={productSku} />
+    <ProductEditForm
+      key={product.id}
+      product={product}
+      productSku={productSku}
+      statusUpdating={statusUpdating}
+    />
   )
 }
 
-function ProductEditForm({ product, productSku }) {
+function ProductEditForm({ product, productSku, statusUpdating }) {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [formData, setFormData] = useState(() => ({
@@ -52,7 +58,6 @@ function ProductEditForm({ product, productSku }) {
     sku: product.sku,
     price: product.price,
     stock: String(product.stock),
-    status: product.status,
     description: product.description,
     material: product.material,
     color: product.color,
@@ -87,7 +92,27 @@ function ProductEditForm({ product, productSku }) {
     navigate(`/products/${productSku}`)
   }
 
+  const handleStatusToggle = async () => {
+    const nextStatus = product.rawStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
+
+    try {
+      await dispatch(
+        toggleProductStatus({
+          sku: productSku,
+          status: nextStatus,
+        }),
+      ).unwrap()
+
+      toast.success(
+        `Product marked ${nextStatus === 'ACTIVE' ? 'active' : 'inactive'}`,
+      )
+    } catch (error) {
+      toast.error(error || 'Unable to update product status')
+    }
+  }
+
   const currentImage = product.image
+  const isActive = product.rawStatus === 'ACTIVE'
 
   return (
     <div className="space-y-6">
@@ -107,6 +132,41 @@ function ProductEditForm({ product, productSku }) {
             Update catalog details, stock information, and how this product
             appears in the storefront.
           </p>
+          <div className="mt-4 inline-flex items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                Product Status
+              </p>
+              <p className="mt-1 text-sm font-semibold text-slate-900">
+                {isActive ? 'Active' : 'Inactive'}
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isActive}
+              onClick={handleStatusToggle}
+              disabled={statusUpdating}
+              className={`relative inline-flex h-8 w-15 items-center rounded-full transition focus:outline-none focus:ring-4 disabled:cursor-not-allowed disabled:opacity-60 ${
+                isActive
+                  ? 'bg-emerald-600 focus:ring-emerald-200'
+                  : 'bg-slate-300 focus:ring-slate-200'
+              }`}
+            >
+              <span
+                className={`inline-block h-6 w-6 rounded-full bg-white shadow-sm transition ${
+                  isActive ? 'translate-x-8' : 'translate-x-1'
+                }`}
+              />
+            </button>
+            <p className="text-sm text-slate-500">
+              {statusUpdating
+                ? 'Updating status...'
+                : isActive
+                  ? 'Tap to mark inactive'
+                  : 'Tap to mark active'}
+            </p>
+          </div>
         </div>
         <div className="rounded-2xl border border-emerald-100 bg-linear-to-br from-emerald-50 to-white p-3 shadow-sm">
           {currentImage ? (
@@ -173,13 +233,6 @@ function ProductEditForm({ product, productSku }) {
               value={formData.stock}
               onChange={handleChange}
               placeholder="42"
-            />
-            <SelectBox
-              label="Status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              options={statusOptions}
             />
           </div>
 
@@ -276,29 +329,6 @@ function ProductEditForm({ product, productSku }) {
           </div>
         </section>
       </form>
-    </div>
-  )
-}
-
-function SelectBox({ label, name, value, onChange, options }) {
-  return (
-    <div className="space-y-2">
-      <label htmlFor={name} className="block text-sm font-medium text-slate-700">
-        {label}
-      </label>
-      <select
-        id={name}
-        name={name}
-        value={value}
-        onChange={onChange}
-        className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
     </div>
   )
 }

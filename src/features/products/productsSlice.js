@@ -103,11 +103,56 @@ export const fetchProductBySku = createAsyncThunk(
   },
 )
 
+export const toggleProductStatus = createAsyncThunk(
+  'products/toggleProductStatus',
+  async ({ sku, status }, { dispatch, rejectWithValue }) => {
+    try {
+      await axiosClient.post(`/products/active-inactive/${sku}`, {
+        status,
+      })
+
+      const refreshedProduct = await dispatch(fetchProductBySku(sku)).unwrap()
+      return refreshedProduct
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Unable to update product status.',
+      )
+    }
+  },
+)
+
+export const uploadProductImage = createAsyncThunk(
+  'products/uploadProductImage',
+  async ({ sku, imageFile }, { dispatch, rejectWithValue }) => {
+    try {
+      const formData = new FormData()
+      formData.append('sku', sku)
+      formData.append('image', imageFile)
+
+      await axiosClient.post(`/products/upload-image/${sku}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
+      const refreshedProduct = await dispatch(fetchProductBySku(sku)).unwrap()
+      return refreshedProduct
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Unable to upload product image.',
+      )
+    }
+  },
+)
+
 const initialState = {
   items: [],
   loading: false,
   loaded: false,
+  productLoading: true,
   error: null,
+  statusUpdating: false,
+  imageUploading: false,
 }
 
 const productsSlice = createSlice({
@@ -172,12 +217,11 @@ const productsSlice = createSlice({
         state.error = action.payload
       })
       .addCase(fetchProductBySku.pending, (state) => {
-        state.loading = true
+        state.productLoading = true
         state.error = null
       })
       .addCase(fetchProductBySku.fulfilled, (state, action) => {
-        state.loading = false
-        state.loaded = true
+        state.productLoading = false
 
         const nextProduct = action.payload
         const existingIndex = state.items.findIndex(
@@ -192,7 +236,29 @@ const productsSlice = createSlice({
         state.items.push(nextProduct)
       })
       .addCase(fetchProductBySku.rejected, (state, action) => {
-        state.loading = false
+        state.productLoading = false
+        state.error = action.payload
+      })
+      .addCase(toggleProductStatus.pending, (state) => {
+        state.statusUpdating = true
+        state.error = null
+      })
+      .addCase(toggleProductStatus.fulfilled, (state) => {
+        state.statusUpdating = false
+      })
+      .addCase(toggleProductStatus.rejected, (state, action) => {
+        state.statusUpdating = false
+        state.error = action.payload
+      })
+      .addCase(uploadProductImage.pending, (state) => {
+        state.imageUploading = true
+        state.error = null
+      })
+      .addCase(uploadProductImage.fulfilled, (state) => {
+        state.imageUploading = false
+      })
+      .addCase(uploadProductImage.rejected, (state, action) => {
+        state.imageUploading = false
         state.error = action.payload
       })
   },
@@ -207,7 +273,12 @@ export const {
 export const selectProducts = (state) => state.products.items
 export const selectProductsLoading = (state) => state.products.loading
 export const selectProductsLoaded = (state) => state.products.loaded
+export const selectProductLoading = (state) => state.products.productLoading
 export const selectProductsError = (state) => state.products.error
+export const selectProductStatusUpdating = (state) =>
+  state.products.statusUpdating
+export const selectProductImageUploading = (state) =>
+  state.products.imageUploading
 export const selectProductById = (state, productId) =>
   state.products.items.find((product) => product.id === productId)
 export const selectProductBySku = (state, productSku) =>
