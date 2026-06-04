@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Filter, PackagePlus, Search } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
+import { Link } from 'react-router-dom'
 import StatCard from '../components/common/StatCard'
 import { AlertTriangle, Boxes, IndianRupee, ShoppingBag } from 'lucide-react'
 import ProductsTable from '../components/products/ProductsTable'
@@ -91,13 +92,13 @@ function Products() {
             Manage bag listings, pricing, stock levels, and product status.
           </p>
         </div>
-        <button
-          type="button"
+        <Link
+          to="/products/create"
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-emerald-900/20 transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-200"
         >
           <PackagePlus size={18} />
           Add Product
-        </button>
+        </Link>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

@@ -8,7 +8,6 @@ function ImageSlider({
   altBase,
   emptyLabel = 'No image available',
   aspectClass = 'aspect-[4/3]',
-  showThumbnails = true,
   className = '',
 }) {
   const [activeIndex, setActiveIndex] = useState(0)

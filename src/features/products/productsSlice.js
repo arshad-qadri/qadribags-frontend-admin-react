@@ -192,6 +192,33 @@ export const updateProduct = createAsyncThunk(
   },
 )
 
+export const createProduct = createAsyncThunk(
+  'products/createProduct',
+  async (productData, { dispatch, rejectWithValue }) => {
+    try {
+      await axiosClient.post('/products/create', {
+        name: productData.name,
+        description: productData.description,
+        category: productData.category,
+        material: productData.material,
+        colors: parseColors(productData.color),
+        weight: parseNumber(productData.weight),
+        dimensions: productData.dimensions,
+        supplier: productData.supplier,
+        price: parseNumber(productData.price),
+        stock: parseNumber(productData.stock),
+      })
+
+      const refreshedProducts = await dispatch(fetchProducts()).unwrap()
+      return refreshedProducts
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Unable to create product.',
+      )
+    }
+  },
+)
+
 const initialState = {
   items: [],
   loading: false,
@@ -201,6 +228,7 @@ const initialState = {
   statusUpdating: false,
   imageUploading: false,
   updating: false,
+  creating: false,
 }
 
 const productsSlice = createSlice({
@@ -320,6 +348,17 @@ const productsSlice = createSlice({
         state.updating = false
         state.error = action.payload
       })
+      .addCase(createProduct.pending, (state) => {
+        state.creating = true
+        state.error = null
+      })
+      .addCase(createProduct.fulfilled, (state) => {
+        state.creating = false
+      })
+      .addCase(createProduct.rejected, (state, action) => {
+        state.creating = false
+        state.error = action.payload
+      })
   },
 })
 
@@ -339,6 +378,7 @@ export const selectProductStatusUpdating = (state) =>
 export const selectProductImageUploading = (state) =>
   state.products.imageUploading
 export const selectProductUpdating = (state) => state.products.updating
+export const selectProductCreating = (state) => state.products.creating
 export const selectProductById = (state, productId) =>
   state.products.items.find((product) => product.id === productId)
 export const selectProductBySku = (state, productSku) =>
