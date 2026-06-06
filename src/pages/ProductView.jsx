@@ -17,12 +17,13 @@ import {
   selectProductLoading,
   selectProductBySku,
 } from '../features/products/productsSlice'
+import { formatCurrency } from '../utils/numberFormat'
 
 const statusClasses = {
-  Active: 'bg-emerald-50 text-emerald-700',
-  Inactive: 'bg-slate-100 text-slate-600',
-  Draft: 'bg-slate-100 text-slate-600',
-  'Low Stock': 'bg-amber-50 text-amber-700',
+  ACTIVE: 'bg-emerald-50 text-emerald-700',
+  INACTIVE: 'bg-slate-100 text-slate-600',
+  DRAFT: 'bg-slate-100 text-slate-600',
+  LOW_STOCK: 'bg-amber-50 text-amber-700',
 }
 
 function ProductView() {
@@ -52,7 +53,7 @@ function ProductView() {
   const productStats = [
     {
       label: 'Price',
-      value: product.price,
+      value: formatCurrency(product.price),
       change: 'Current selling price',
       icon: BadgeIndianRupee,
       tone: 'emerald',
@@ -150,7 +151,7 @@ function ProductView() {
               <DetailItem label="SKU" value={product.sku} />
               <DetailItem label="Category" value={product.category} />
               <DetailItem label="Material" value={product.material} />
-              <DetailItem label="Color" value={product.color} />
+              <DetailItem label="Color" value={product.colors} />
               <DetailItem label="Weight" value={product.weight} />
               <DetailItem label="Dimensions" value={product.dimensions} />
               <DetailItem label="Supplier" value={product.supplier} wide />

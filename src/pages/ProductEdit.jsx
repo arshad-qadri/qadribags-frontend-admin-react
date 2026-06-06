@@ -15,6 +15,14 @@ import {
   updateProduct,
 } from '../features/products/productsSlice'
 
+function getProductImage(product) {
+  return product?.images?.[0]?.url || ''
+}
+
+function getProductColorValue(product) {
+  return Array.isArray(product.colors) ? product.colors.join(', ') : ''
+}
+
 function ProductEdit() {
   const { productSku } = useParams()
   const dispatch = useDispatch()
@@ -59,14 +67,14 @@ function ProductEditForm({ product, productSku, statusUpdating, updating }) {
     name: product.name,
     category: product.category,
     sku: product.sku,
-    price: product.price,
+    price: String(product.price ?? ''),
     stock: String(product.stock),
     description: product.description,
     material: product.material,
-    color: product.color,
-    weight: product.weight,
-    dimensions: product.dimensions,
-    supplier: product.supplier,
+    color: getProductColorValue(product),
+    weight: String(product.weight ?? ''),
+    dimensions: product.dimensions || '',
+    supplier: product.supplier || '',
   }))
 
   const handleChange = ({ target }) => {
@@ -94,7 +102,7 @@ function ProductEditForm({ product, productSku, statusUpdating, updating }) {
   }
 
   const handleStatusToggle = async () => {
-    const nextStatus = product.rawStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
+    const nextStatus = product.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
 
     try {
       await dispatch(
@@ -112,8 +120,8 @@ function ProductEditForm({ product, productSku, statusUpdating, updating }) {
     }
   }
 
-  const currentImage = product.image
-  const isActive = product.rawStatus === 'ACTIVE'
+  const currentImage = getProductImage(product)
+  const isActive = product.status === 'ACTIVE'
 
   return (
     <div className="space-y-6">

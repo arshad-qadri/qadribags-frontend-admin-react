@@ -17,6 +17,10 @@ import { fetchAvailableStockAndProductCount } from "../features/inventory/availa
 import { fetchLowStockProductCount } from "../features/inventory/lowStockProductCount";
 import { fetchCatalogValue } from "../features/inventory/catalogValue";
 
+function safeText(value) {
+  return String(value || "").toLowerCase();
+}
+
 function Products() {
   const dispatch = useDispatch();
   const products = useSelector(selectProducts);
@@ -53,9 +57,9 @@ function Products() {
     }
 
     return (
-      product.name.toLowerCase().includes(query) ||
-      product.sku.toLowerCase().includes(query) ||
-      product.category.toLowerCase().includes(query)
+      safeText(product.name).includes(query) ||
+      safeText(product.sku).includes(query) ||
+      safeText(product.category).includes(query)
     );
   });
 

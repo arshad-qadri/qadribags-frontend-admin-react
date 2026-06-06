@@ -44,7 +44,7 @@ function ImageSlider({
         <div className="product-gallery-slider relative">
           <Slider {...sliderSettings}>
             {images.map((image, index) => (
-              <div key={image.id || image.publicId || image.url || index}>
+              <div key={image.public_id  || index}>
                 <img
                   src={image.url}
                   alt={`${altBase} ${index + 1}`}

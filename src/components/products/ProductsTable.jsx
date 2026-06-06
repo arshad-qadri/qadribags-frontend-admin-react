@@ -1,11 +1,16 @@
 import { Edit, Eye, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { formatCurrency } from '../../utils/numberFormat'
 
 const statusClasses = {
-  Active: 'bg-emerald-50 text-emerald-700',
-  Inactive: 'bg-slate-100 text-slate-600',
-  Draft: 'bg-slate-100 text-slate-600',
-  'Low Stock': 'bg-amber-50 text-amber-700',
+  ACTIVE: 'bg-emerald-50 text-emerald-700',
+  INACTIVE: 'bg-slate-100 text-slate-600',
+  DRAFT: 'bg-slate-100 text-slate-600',
+  LOW_STOCK: 'bg-amber-50 text-amber-700',
+}
+
+function getProductImage(product) {
+  return product?.images?.[0]?.url || ''
 }
 
 function ProductsTable({ products }) {
@@ -29,9 +34,9 @@ function ProductsTable({ products }) {
               <tr key={product.id} className="bg-white hover:bg-slate-50">
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-4">
-                    {product.image ? (
+                    {getProductImage(product) ? (
                       <img
-                        src={product.image}
+                        src={getProductImage(product)}
                         alt={product.name}
                         className="h-16 w-16 rounded-lg object-cover"
                       />
@@ -57,7 +62,7 @@ function ProductsTable({ products }) {
                   {product.sku}
                 </td>
                 <td className="whitespace-nowrap px-5 py-4 font-bold text-slate-950">
-                  {product.price}
+                  {formatCurrency(product.price)}
                 </td>
                 <td className="whitespace-nowrap px-5 py-4">
                   <span className="font-bold text-slate-950">

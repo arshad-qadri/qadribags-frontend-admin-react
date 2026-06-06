@@ -41,6 +41,8 @@ function ProductImages() {
     return <Navigate to="/products" replace />
   }
 
+  const productImages = Array.isArray(product.images) ? product.images : []
+
   const handleUpload = async ({ target }) => {
     const file = target.files?.[0]
 
@@ -72,7 +74,7 @@ function ProductImages() {
       await dispatch(
         deleteProductImage({
           sku: productSku,
-          publicId: imageToDelete.publicId,
+          publicId: imageToDelete.public_id,
         }),
       ).unwrap()
 
@@ -134,7 +136,7 @@ function ProductImages() {
           </label>
         </div>
 
-        {product.images.length === 0 ? (
+        {productImages.length === 0 ? (
           <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
             <p className="text-base font-semibold text-slate-900">
               No product images uploaded yet
@@ -145,7 +147,7 @@ function ProductImages() {
           </div>
         ) : (
           <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {product.images.map((image, index) => (
+            {productImages.map((image, index) => (
               <article
                 key={`${product.id}-${index}`}
                 className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
