@@ -3,7 +3,8 @@ import authReducer from "../features/auth/authSlice";
 import customersReducer from "../features/customers/customersSlice";
 import productsReducer from "../features/products/productsSlice";
 import lowStockAlertsReducer from "../features/inventory/lowStockAlertsSlice";
-import  inventoryCategoryRedcer from "../features/inventory/inventoryCategory";
+import inventoryCategoryRedcer from "../features/inventory/inventoryCategory";
+import productCountReducer from "../features/inventory/productCount";
 
 export const store = configureStore({
   reducer: {
@@ -12,7 +13,8 @@ export const store = configureStore({
     products: productsReducer,
     inventory: combineReducers({
       lowStockAlerts: lowStockAlertsReducer,
-      inventoryCategory: inventoryCategoryRedcer
+      inventoryCategory: inventoryCategoryRedcer,
+      productCount: productCountReducer,
     }),
   },
 });

@@ -1,84 +1,94 @@
-import { useEffect, useState } from 'react'
-import { Filter, PackagePlus, Search } from 'lucide-react'
-import { useDispatch, useSelector } from 'react-redux'
-import { Link } from 'react-router-dom'
-import StatCard from '../components/common/StatCard'
-import { AlertTriangle, Boxes, IndianRupee, ShoppingBag } from 'lucide-react'
-import ProductsTable from '../components/products/ProductsTable'
+import { useEffect, useState } from "react";
+import { Filter, PackagePlus, Search } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
+import StatCard from "../components/common/StatCard";
+import { AlertTriangle, Boxes, IndianRupee, ShoppingBag } from "lucide-react";
+import ProductsTable from "../components/products/ProductsTable";
 import {
   fetchProducts,
   selectProducts,
   selectProductsError,
   selectProductsLoaded,
   selectProductsLoading,
-} from '../features/products/productsSlice'
+} from "../features/products/productsSlice";
+import { fetchProductCount } from "../features/inventory/productCount";
 
 function Products() {
-  const dispatch = useDispatch()
-  const products = useSelector(selectProducts)
-  const loading = useSelector(selectProductsLoading)
-  const loaded = useSelector(selectProductsLoaded)
-  const error = useSelector(selectProductsError)
-  const [searchTerm, setSearchTerm] = useState('')
+  const dispatch = useDispatch();
+  const products = useSelector(selectProducts);
+  const loading = useSelector(selectProductsLoading);
+  const loaded = useSelector(selectProductsLoaded);
+  const error = useSelector(selectProductsError);
+  const [searchTerm, setSearchTerm] = useState("");
+  const {counts} =useSelector(state=>state?.inventory?.productCount)
+  
 
   useEffect(() => {
     if (!loaded) {
-      dispatch(fetchProducts())
+      dispatch(fetchProducts());
     }
-  }, [dispatch, loaded])
+  }, [dispatch, loaded]);
+  useEffect(() => {
+    dispatch(fetchProductCount());
+  }, [dispatch]);
 
   const filteredProducts = products.filter((product) => {
-    const query = searchTerm.trim().toLowerCase()
+    const query = searchTerm.trim().toLowerCase();
 
     if (!query) {
-      return true
+      return true;
     }
 
     return (
       product.name.toLowerCase().includes(query) ||
       product.sku.toLowerCase().includes(query) ||
       product.category.toLowerCase().includes(query)
-    )
-  })
+    );
+  });
 
-  const totalStock = products.reduce((sum, product) => sum + product.stock, 0)
-  const lowStockCount = products.filter((product) => product.stock <= 10).length
-  const activeCount = products.filter((product) => product.status === 'Active').length
+  const totalStock = products.reduce((sum, product) => sum + product.stock, 0);
+  const lowStockCount = products.filter(
+    (product) => product.stock <= 10,
+  ).length;
+  const activeCount = products.filter(
+    (product) => product.status === "Active",
+  ).length;
   const totalCatalogValue = products.reduce(
     (sum, product) => sum + product.priceValue * product.stock,
     0,
-  )
+  );
 
   const productStats = [
     {
-      label: 'Total Products',
-      value: String(products.length),
-      change: `${activeCount} active products`,
+      label: "Total Products",
+      value: counts?.total_products,
+      change: `${counts?.active_product_count} active products`,
       icon: ShoppingBag,
-      tone: 'emerald',
+      tone: "emerald",
     },
     {
-      label: 'Available Stock',
-      value: totalStock.toLocaleString('en-IN'),
+      label: "Available Stock",
+      value: totalStock.toLocaleString("en-IN"),
       change: `${filteredProducts.length} products visible`,
       icon: Boxes,
-      tone: 'blue',
+      tone: "blue",
     },
     {
-      label: 'Low Stock',
+      label: "Low Stock",
       value: String(lowStockCount),
-      change: 'Products at or below 10 units',
+      change: "Products at or below 10 units",
       icon: AlertTriangle,
-      tone: 'amber',
+      tone: "amber",
     },
     {
-      label: 'Catalog Value',
-      value: `Rs ${totalCatalogValue.toLocaleString('en-IN')}`,
-      change: 'Based on current stock x price',
+      label: "Catalog Value",
+      value: `Rs ${totalCatalogValue.toLocaleString("en-IN")}`,
+      change: "Based on current stock x price",
       icon: IndianRupee,
-      tone: 'violet',
+      tone: "violet",
     },
-  ]
+  ];
 
   return (
     <div className="space-y-6">
@@ -144,7 +154,7 @@ function Products() {
         <ProductsTable products={filteredProducts} />
       )}
     </div>
-  )
+  );
 }
 
-export default Products
+export default Products;
