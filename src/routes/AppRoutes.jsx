@@ -3,6 +3,7 @@ import ProtectedLayout from '../layouts/ProtectedLayout'
 import PublicLayout from '../layouts/PublicLayout'
 import Dashboard from '../pages/Dashboard'
 import Login from '../pages/Login'
+import Customers from '../pages/Customers'
 import ProductCreate from '../pages/ProductCreate'
 import ProductEdit from '../pages/ProductEdit'
 import ProductImages from '../pages/ProductImages'
@@ -26,7 +27,7 @@ function AppRoutes() {
           <Route path="/products/:productSku/edit" element={<ProductEdit />} />
           <Route path="/products/:productSku/images" element={<ProductImages />} />
           <Route path="/inventory" element={<Dashboard />} />
-          <Route path="/customers" element={<Dashboard />} />
+          <Route path="/customers" element={<Customers />} />
           <Route path="/reports" element={<Dashboard />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
