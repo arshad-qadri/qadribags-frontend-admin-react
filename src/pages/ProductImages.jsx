@@ -1,9 +1,12 @@
 import { ArrowLeft, ImagePlus, Trash2 } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import ConfirmationPopup from '../components/common/ConfirmationPopup'
 import {
+  deleteProductImage,
+  selectProductImageDeleting,
   fetchProductBySku,
   selectProductImageUploading,
   selectProductLoading,
@@ -15,8 +18,10 @@ function ProductImages() {
   const { productSku } = useParams()
   const dispatch = useDispatch()
   const loading = useSelector(selectProductLoading)
+  const imageDeleting = useSelector(selectProductImageDeleting)
   const imageUploading = useSelector(selectProductImageUploading)
   const product = useSelector((state) => selectProductBySku(state, productSku))
+  const [imageToDelete, setImageToDelete] = useState(null)
 
   useEffect(() => {
     if (productSku) {
@@ -58,8 +63,24 @@ function ProductImages() {
     }
   }
 
-  const handleDelete = () => {
-    toast.info('Delete image API is not integrated yet.')
+  const handleDeleteConfirm = async () => {
+    if (!imageToDelete) {
+      return
+    }
+
+    try {
+      await dispatch(
+        deleteProductImage({
+          sku: productSku,
+          publicId: imageToDelete.publicId,
+        }),
+      ).unwrap()
+
+      setImageToDelete(null)
+      toast.success('Product image deleted')
+    } catch (error) {
+      toast.error(error || 'Unable to delete image')
+    }
   }
 
   return (
@@ -153,7 +174,8 @@ function ProductImages() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleDelete(index)}
+                    onClick={() => setImageToDelete(image)}
+                    disabled={imageDeleting}
                     className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 focus:outline-none focus:ring-4 focus:ring-red-100"
                     aria-label={`Delete image ${index + 1}`}
                   >
@@ -165,6 +187,17 @@ function ProductImages() {
           </div>
         )}
       </section>
+
+      <ConfirmationPopup
+        open={Boolean(imageToDelete)}
+        title="Delete Product Image"
+        message="This image will be permanently removed from the product gallery. Do you want to continue?"
+        confirmLabel="Delete Image"
+        confirmTone="danger"
+        loading={imageDeleting}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setImageToDelete(null)}
+      />
     </div>
   )
 }

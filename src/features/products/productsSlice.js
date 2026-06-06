@@ -219,6 +219,29 @@ export const createProduct = createAsyncThunk(
   },
 )
 
+export const deleteProductImage = createAsyncThunk(
+  'products/deleteProductImage',
+  async ({ sku, publicId }, { dispatch, rejectWithValue }) => {
+    try {
+      await axiosClient.delete(`/products/delete-image/${sku}`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        data: {
+          public_id: publicId,
+        },
+      })
+
+      const refreshedProduct = await dispatch(fetchProductBySku(sku)).unwrap()
+      return refreshedProduct
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Unable to delete product image.',
+      )
+    }
+  },
+)
+
 const initialState = {
   items: [],
   loading: false,
@@ -227,6 +250,7 @@ const initialState = {
   error: null,
   statusUpdating: false,
   imageUploading: false,
+  imageDeleting: false,
   updating: false,
   creating: false,
 }
@@ -337,6 +361,17 @@ const productsSlice = createSlice({
         state.imageUploading = false
         state.error = action.payload
       })
+      .addCase(deleteProductImage.pending, (state) => {
+        state.imageDeleting = true
+        state.error = null
+      })
+      .addCase(deleteProductImage.fulfilled, (state) => {
+        state.imageDeleting = false
+      })
+      .addCase(deleteProductImage.rejected, (state, action) => {
+        state.imageDeleting = false
+        state.error = action.payload
+      })
       .addCase(updateProduct.pending, (state) => {
         state.updating = true
         state.error = null
@@ -377,6 +412,8 @@ export const selectProductStatusUpdating = (state) =>
   state.products.statusUpdating
 export const selectProductImageUploading = (state) =>
   state.products.imageUploading
+export const selectProductImageDeleting = (state) =>
+  state.products.imageDeleting
 export const selectProductUpdating = (state) => state.products.updating
 export const selectProductCreating = (state) => state.products.creating
 export const selectProductById = (state, productId) =>
