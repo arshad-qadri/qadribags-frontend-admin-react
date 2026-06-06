@@ -57,12 +57,6 @@ const categoryStock = [
   { label: 'Laptop Bags', value: 43, color: 'bg-amber-500' },
 ]
 
-const lowStockItems = [
-  { name: 'Classic School Backpack', sku: 'QB-SB-104', stock: 9, reorder: 30 },
-  { name: 'Executive Laptop Bag', sku: 'QB-LB-221', stock: 6, reorder: 20 },
-  { name: 'Weekend Travel Duffel', sku: 'QB-TB-078', stock: 4, reorder: 18 },
-  { name: 'Premium Hand Bag', sku: 'QB-HB-312', stock: 7, reorder: 24 },
-]
 
 const recentOrders = [
   {
@@ -106,7 +100,7 @@ function Dashboard() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_1.3fr]">
-        <LowStockAlerts items={lowStockItems} />
+        <LowStockAlerts  />
         <RecentOrdersTable orders={recentOrders} />
       </section>
     </div>
