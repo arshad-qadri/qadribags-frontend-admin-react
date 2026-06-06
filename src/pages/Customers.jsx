@@ -24,10 +24,13 @@ import {
 const emptyForm = {
   name: '',
   email: '',
-  phone: '',
+  mobile_number: '',
+  address: '',
   city: '',
   state: '',
-  status: 'ACTIVE',
+  pincode: '',
+  gst_number: '',
+  customer_type: 'WHOLESALE',
 }
 
 function Customers() {
@@ -60,39 +63,45 @@ function Customers() {
         return true
       }
 
-      return [customer.name, customer.email, customer.phone, customer.city, customer.state]
+      return [
+        customer.name,
+        customer.email,
+        customer.mobile_number,
+        customer.city,
+        customer.state,
+      ]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(query))
     })
   }, [customers, searchTerm])
 
-  const activeCustomers = customers.filter((customer) => customer.status === 'Active').length
-  const totalOrders = customers.reduce((sum, customer) => sum + customer.ordersCount, 0)
-  const totalRevenue = customers.reduce(
-    (sum, customer) => sum + customer.totalSpentValue,
-    0,
-  )
   const citiesCovered = new Set(customers.map((customer) => customer.city).filter(Boolean)).size
+  const wholesaleCustomers = customers.filter(
+    (customer) => customer.customer_type === 'WHOLESALE',
+  ).length
+  const retailCustomers = customers.filter(
+    (customer) => customer.customer_type === 'RETAIL',
+  ).length
 
   const customerStats = [
     {
       label: 'Total Customers',
       value: String(customers.length),
-      change: `${activeCustomers} active customers`,
+      change: `${filteredCustomers.length} customers visible`,
       icon: Users,
       tone: 'emerald',
     },
     {
-      label: 'Orders Placed',
-      value: totalOrders.toLocaleString('en-IN'),
-      change: `${filteredCustomers.length} customers visible`,
+      label: 'Wholesale',
+      value: String(wholesaleCustomers),
+      change: `${retailCustomers} retail customers`,
       icon: UserPlus,
       tone: 'blue',
     },
     {
-      label: 'Customer Value',
-      value: `Rs ${totalRevenue.toLocaleString('en-IN')}`,
-      change: 'Lifetime spending across customers',
+      label: 'Customer Type',
+      value: wholesaleCustomers > 0 ? 'WHOLESALE' : retailCustomers > 0 ? 'RETAIL' : '-',
+      change: 'Based on available customer records',
       icon: Wallet,
       tone: 'violet',
     },
@@ -122,10 +131,13 @@ function Customers() {
     setFormData({
       name: customer.name,
       email: customer.email,
-      phone: customer.phone,
+      mobile_number: customer.mobile_number,
+      address: customer.address,
       city: customer.city,
       state: customer.state,
-      status: customer.status.toUpperCase(),
+      pincode: customer.pincode,
+      gst_number: customer.gst_number,
+      customer_type: customer.customer_type,
     })
     setIsFormOpen(true)
   }
@@ -204,7 +216,7 @@ function Customers() {
             />
             <input
               type="search"
-              placeholder="Search name, email, phone, location"
+              placeholder="Search name, email, mobile, location"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               className="w-full rounded-lg border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
@@ -317,27 +329,36 @@ function CustomerFormModal({
             />
             <InputBox
               label="Phone"
-              name="phone"
-              value={formData.phone}
+              name="mobile_number"
+              value={formData.mobile_number}
               onChange={onChange}
               placeholder="+91 98765 43210"
             />
             <div className="space-y-2">
-              <label htmlFor="status" className="block text-sm font-medium text-slate-700">
-                Status
+              <label
+                htmlFor="customer_type"
+                className="block text-sm font-medium text-slate-700"
+              >
+                Customer Type
               </label>
               <select
-                id="status"
-                name="status"
-                value={formData.status}
+                id="customer_type"
+                name="customer_type"
+                value={formData.customer_type}
                 onChange={onChange}
                 className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
               >
-                <option value="ACTIVE">Active</option>
-                <option value="INACTIVE">Inactive</option>
-                <option value="BLOCKED">Blocked</option>
+                <option value="WHOLESALE">WHOLESALE</option>
+                <option value="RETAIL">RETAIL</option>
               </select>
             </div>
+            <InputBox
+              label="Address"
+              name="address"
+              value={formData.address}
+              onChange={onChange}
+              placeholder="MG Road"
+            />
             <InputBox
               label="City"
               name="city"
@@ -351,6 +372,20 @@ function CustomerFormModal({
               value={formData.state}
               onChange={onChange}
               placeholder="Maharashtra"
+            />
+            <InputBox
+              label="Pincode"
+              name="pincode"
+              value={formData.pincode}
+              onChange={onChange}
+              placeholder="411001"
+            />
+            <InputBox
+              label="GST Number"
+              name="gst_number"
+              value={formData.gst_number}
+              onChange={onChange}
+              placeholder="27ABCDE1234F1Z5"
             />
           </div>
 

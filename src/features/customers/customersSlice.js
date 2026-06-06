@@ -1,54 +1,17 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import axiosClient from '../../api/axiosClient'
 
-function formatDate(value) {
-  if (!value) {
-    return '-'
-  }
-
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return '-'
-  }
-
-  return date.toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
-function normalizeCustomer(customer) {
-  return {
-    id: customer.id ?? customer._id ?? customer.customer_id,
-    name: customer.name ?? customer.full_name ?? '',
-    email: customer.email ?? '',
-    phone: customer.phone ?? customer.mobile ?? '',
-    city: customer.city ?? customer.address?.city ?? '',
-    state: customer.state ?? customer.address?.state ?? '',
-    ordersCount: Number(customer.orders_count ?? customer.orderCount ?? customer.ordersCount ?? 0),
-    totalSpentValue: Number(customer.total_spent ?? customer.totalSpent ?? 0),
-    totalSpent: `Rs ${Number(customer.total_spent ?? customer.totalSpent ?? 0).toLocaleString('en-IN')}`,
-    status: customer.status
-      ? String(customer.status)
-          .toLowerCase()
-          .replace(/_/g, ' ')
-          .replace(/\b\w/g, (char) => char.toUpperCase())
-      : 'Active',
-    createdAt: customer.created_at ?? customer.createdAt,
-    joinedOn: formatDate(customer.created_at ?? customer.createdAt),
-  }
-}
-
 function buildCustomerPayload(customerData) {
   return {
     name: customerData.name.trim(),
     email: customerData.email.trim(),
-    phone: customerData.phone.trim(),
+    mobile_number: customerData.mobile_number.trim(),
+    address: customerData.address.trim(),
     city: customerData.city.trim(),
     state: customerData.state.trim(),
-    status: customerData.status.trim().toUpperCase(),
+    pincode: customerData.pincode.trim(),
+    gst_number: customerData.gst_number.trim(),
+    customer_type: customerData.customer_type.trim().toUpperCase(),
   }
 }
 
@@ -58,7 +21,7 @@ export const fetchCustomers = createAsyncThunk(
     try {
       const response = await axiosClient.get('/customers/list')
 
-      return (response.data?.data || []).map(normalizeCustomer)
+      return response.data?.data || []
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || 'Unable to fetch customers.',
