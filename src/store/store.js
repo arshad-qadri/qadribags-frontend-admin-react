@@ -5,7 +5,8 @@ import productsReducer from "../features/products/productsSlice";
 import lowStockAlertsReducer from "../features/inventory/lowStockAlertsSlice";
 import inventoryCategoryRedcer from "../features/inventory/inventoryCategory";
 import productCountReducer from "../features/inventory/productCount";
-import availableStockAndProductCountReducer from "../features/inventory/availableStockAndProductCount"
+import availableStockAndProductCountReducer from "../features/inventory/availableStockAndProductCount";
+import lowStockProductCountReducer from "../features/inventory/lowStockProductCount";
 
 export const store = configureStore({
   reducer: {
@@ -16,7 +17,8 @@ export const store = configureStore({
       lowStockAlerts: lowStockAlertsReducer,
       inventoryCategory: inventoryCategoryRedcer,
       productCount: productCountReducer,
-      availableStockAndProductCount:availableStockAndProductCountReducer
+      availableStockAndProductCount: availableStockAndProductCountReducer,
+      lowStockProductCount: lowStockProductCountReducer,
     }),
   },
 });

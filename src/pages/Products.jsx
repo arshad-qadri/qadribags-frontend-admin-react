@@ -14,6 +14,7 @@ import {
 } from "../features/products/productsSlice";
 import { fetchProductCount } from "../features/inventory/productCount";
 import { fetchAvailableStockAndProductCount } from "../features/inventory/availableStockAndProductCount";
+import { fetchLowStockProductCount } from "../features/inventory/lowStockProductCount";
 
 function Products() {
   const dispatch = useDispatch();
@@ -23,6 +24,7 @@ function Products() {
   const error = useSelector(selectProductsError);
   const [searchTerm, setSearchTerm] = useState("");
   const { counts } = useSelector((state) => state?.inventory?.productCount);
+  const { count } = useSelector((state) => state?.inventory?.lowStockProductCount);
   const { stockAndProductCount } = useSelector(
     (state) => state?.inventory?.availableStockAndProductCount,
   );
@@ -35,6 +37,7 @@ function Products() {
   useEffect(() => {
     dispatch(fetchProductCount());
     dispatch(fetchAvailableStockAndProductCount());
+    dispatch(fetchLowStockProductCount());
   }, [dispatch]);
 
   const filteredProducts = products.filter((product) => {
@@ -80,7 +83,7 @@ function Products() {
     },
     {
       label: "Low Stock",
-      value: String(lowStockCount),
+      value: String(count),
       change: "Products at or below 10 units",
       icon: AlertTriangle,
       tone: "amber",
