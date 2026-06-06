@@ -13,7 +13,7 @@ function StatCard({ label, value, change, icon: Icon, tone = 'emerald' }) {
       <div className="flex min-w-0 items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-slate-500">{label}</p>
-          <p className="mt-3 break-words text-xl leading-tight font-bold text-slate-950">
+          <p className="mt-3 break-words text-lg leading-tight font-bold text-slate-950">
             {value}
           </p>
         </div>

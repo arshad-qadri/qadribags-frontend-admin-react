@@ -15,6 +15,7 @@ import {
 import { fetchProductCount } from "../features/inventory/productCount";
 import { fetchAvailableStockAndProductCount } from "../features/inventory/availableStockAndProductCount";
 import { fetchLowStockProductCount } from "../features/inventory/lowStockProductCount";
+import { fetchCatalogValue } from "../features/inventory/catalogValue";
 
 function Products() {
   const dispatch = useDispatch();
@@ -24,7 +25,10 @@ function Products() {
   const error = useSelector(selectProductsError);
   const [searchTerm, setSearchTerm] = useState("");
   const { counts } = useSelector((state) => state?.inventory?.productCount);
-  const { count } = useSelector((state) => state?.inventory?.lowStockProductCount);
+  const { count } = useSelector(
+    (state) => state?.inventory?.lowStockProductCount,
+  );
+  const { catalog } = useSelector((state) => state?.inventory?.catalogValue);
   const { stockAndProductCount } = useSelector(
     (state) => state?.inventory?.availableStockAndProductCount,
   );
@@ -38,6 +42,7 @@ function Products() {
     dispatch(fetchProductCount());
     dispatch(fetchAvailableStockAndProductCount());
     dispatch(fetchLowStockProductCount());
+    dispatch(fetchCatalogValue());
   }, [dispatch]);
 
   const filteredProducts = products.filter((product) => {
@@ -54,18 +59,6 @@ function Products() {
     );
   });
 
-  const totalStock = products.reduce((sum, product) => sum + product.stock, 0);
-  const lowStockCount = products.filter(
-    (product) => product.stock <= 10,
-  ).length;
-  const activeCount = products.filter(
-    (product) => product.status === "Active",
-  ).length;
-  const totalCatalogValue = products.reduce(
-    (sum, product) => sum + product.priceValue * product.stock,
-    0,
-  );
-
   const productStats = [
     {
       label: "Total Products",
@@ -76,7 +69,9 @@ function Products() {
     },
     {
       label: "Available Stock",
-      value: stockAndProductCount?.total_available_stock?.toLocaleString("en-IN") || 0,
+      value:
+        stockAndProductCount?.total_available_stock?.toLocaleString("en-IN") ||
+        0,
       change: `${stockAndProductCount?.total_product_count} products visible`,
       icon: Boxes,
       tone: "blue",
@@ -90,7 +85,7 @@ function Products() {
     },
     {
       label: "Catalog Value",
-      value: `Rs ${totalCatalogValue.toLocaleString("en-IN")}`,
+      value: `Rs ${catalog?.value.toLocaleString("en-IN")}`,
       change: "Based on current stock x price",
       icon: IndianRupee,
       tone: "violet",
