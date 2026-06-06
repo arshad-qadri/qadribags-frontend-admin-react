@@ -13,6 +13,7 @@ import {
   selectProductsLoading,
 } from "../features/products/productsSlice";
 import { fetchProductCount } from "../features/inventory/productCount";
+import { fetchAvailableStockAndProductCount } from "../features/inventory/availableStockAndProductCount";
 
 function Products() {
   const dispatch = useDispatch();
@@ -21,8 +22,10 @@ function Products() {
   const loaded = useSelector(selectProductsLoaded);
   const error = useSelector(selectProductsError);
   const [searchTerm, setSearchTerm] = useState("");
-  const {counts} =useSelector(state=>state?.inventory?.productCount)
-  
+  const { counts } = useSelector((state) => state?.inventory?.productCount);
+  const { stockAndProductCount } = useSelector(
+    (state) => state?.inventory?.availableStockAndProductCount,
+  );
 
   useEffect(() => {
     if (!loaded) {
@@ -31,6 +34,7 @@ function Products() {
   }, [dispatch, loaded]);
   useEffect(() => {
     dispatch(fetchProductCount());
+    dispatch(fetchAvailableStockAndProductCount());
   }, [dispatch]);
 
   const filteredProducts = products.filter((product) => {
@@ -69,8 +73,8 @@ function Products() {
     },
     {
       label: "Available Stock",
-      value: totalStock.toLocaleString("en-IN"),
-      change: `${filteredProducts.length} products visible`,
+      value: stockAndProductCount?.total_available_stock?.toLocaleString("en-IN") || 0,
+      change: `${stockAndProductCount?.total_product_count} products visible`,
       icon: Boxes,
       tone: "blue",
     },
