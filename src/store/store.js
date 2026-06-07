@@ -1,6 +1,12 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import authReducer from "../features/auth/authSlice";
-import customersReducer from "../features/customers/customersSlice";
+import {
+  createCustomerReducer,
+  deleteCustomerReducer,
+  fetchCustomerByCustomerIdReducer,
+  fetchCustomersReducer,
+  updateCustomerReducer,
+} from "../features/customers";
 import {
   createProductReducer,
   deleteProductImageReducer,
@@ -20,7 +26,13 @@ import catalogValueReducer from "../features/inventory/catalogValue";
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    customers: customersReducer,
+    customers: combineReducers({
+      fetchCustomers: fetchCustomersReducer,
+      fetchCustomerByCustomerId: fetchCustomerByCustomerIdReducer,
+      createCustomer: createCustomerReducer,
+      updateCustomer: updateCustomerReducer,
+      deleteCustomer: deleteCustomerReducer,
+    }),
     products: combineReducers({
       fetchProducts: fetchProductsReducer,
       fetchProductBySku: fetchProductBySkuReducer,

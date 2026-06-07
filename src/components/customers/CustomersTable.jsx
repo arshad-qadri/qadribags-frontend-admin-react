@@ -1,4 +1,5 @@
-import { Edit, Trash2 } from 'lucide-react'
+import { Edit, Eye, Trash2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 function CustomersTable({ customers, onEdit, onDelete }) {
   return (
@@ -7,6 +8,7 @@ function CustomersTable({ customers, onEdit, onDelete }) {
         <table className="w-full min-w-[980px] text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
+              <th className="px-5 py-4 font-bold">Customer ID</th>
               <th className="px-5 py-4 font-bold">Name</th>
               <th className="px-5 py-4 font-bold">Email</th>
               <th className="px-5 py-4 font-bold">Mobile</th>
@@ -18,6 +20,9 @@ function CustomersTable({ customers, onEdit, onDelete }) {
           <tbody className="divide-y divide-slate-100">
             {customers.map((customer) => (
               <tr key={customer.id} className="bg-white hover:bg-slate-50">
+                <td className="whitespace-nowrap px-5 py-4 font-medium text-slate-600">
+                  {customer.customer_id || '-'}
+                </td>
                 <td className="whitespace-nowrap px-5 py-4 font-medium text-slate-600">
                   {customer.name || '-'}
                 </td>
@@ -35,6 +40,13 @@ function CustomersTable({ customers, onEdit, onDelete }) {
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex justify-end gap-2">
+                    <Link
+                      to={`/customers/${customer.customer_id}`}
+                      className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                      aria-label={`View ${customer.name}`}
+                    >
+                      <Eye size={16} />
+                    </Link>
                     <button
                       type="button"
                       onClick={() => onEdit(customer)}

@@ -1,0 +1,12 @@
+export { default as createCustomerReducer } from './createCustomer'
+export { default as deleteCustomerReducer } from './deleteCustomer'
+export { default as fetchCustomerByCustomerIdReducer } from './fetchCustomerByCustomerId'
+export { default as fetchCustomersReducer } from './fetchCustomers'
+export { default as updateCustomerReducer } from './updateCustomer'
+
+export * from './createCustomer'
+export * from './deleteCustomer'
+export * from './fetchCustomerByCustomerId'
+export * from './fetchCustomers'
+export * from './updateCustomer'
+export * from './customersSlice'

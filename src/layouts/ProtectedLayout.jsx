@@ -22,7 +22,11 @@ function ProtectedLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const pageTitle =
     pageTitles[location.pathname] ||
-    (location.pathname.startsWith('/products/') ? 'Product Details' : 'Dashboard')
+    (location.pathname.startsWith('/products/')
+      ? 'Product Details'
+      : location.pathname.startsWith('/customers/')
+        ? 'Customer Details'
+        : 'Dashboard')
 
   if (!token) {
     return <Navigate to="/login" replace />

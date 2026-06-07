@@ -19,7 +19,7 @@ import {
   selectCustomersLoaded,
   selectCustomersLoading,
   updateCustomer,
-} from '../features/customers/customersSlice'
+} from '../features/customers'
 
 const emptyForm = {
   name: '',
@@ -151,7 +151,11 @@ function Customers() {
     event.preventDefault()
 
     const action = editingCustomer
-      ? updateCustomer({ id: editingCustomer.id, customerData: formData })
+      ? updateCustomer({
+          id: editingCustomer.customer_id,
+          customerId: editingCustomer.customer_id,
+          customerData: formData,
+        })
       : createCustomer(formData)
 
     dispatch(action)
