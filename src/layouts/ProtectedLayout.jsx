@@ -22,11 +22,17 @@ function ProtectedLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const pageTitle =
     pageTitles[location.pathname] ||
-    (location.pathname.startsWith('/products/')
-      ? 'Product Details'
-      : location.pathname.startsWith('/customers/')
-        ? 'Customer Details'
-        : 'Dashboard')
+    (location.pathname === '/orders/create'
+      ? 'Create Order'
+      : location.pathname.endsWith('/edit') && location.pathname.startsWith('/orders/')
+        ? 'Edit Order'
+        : location.pathname.startsWith('/orders/')
+          ? 'Order Details'
+      : location.pathname.startsWith('/products/')
+        ? 'Product Details'
+        : location.pathname.startsWith('/customers/')
+          ? 'Customer Details'
+          : 'Dashboard')
 
   if (!token) {
     return <Navigate to="/login" replace />
