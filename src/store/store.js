@@ -5,6 +5,7 @@ import {
   deleteCustomerReducer,
   fetchCustomerByCustomerIdReducer,
   fetchCustomersReducer,
+  toggleCustomerStatusReducer,
   updateCustomerReducer,
 } from "../features/customers";
 import {
@@ -31,6 +32,7 @@ export const store = configureStore({
       fetchCustomerByCustomerId: fetchCustomerByCustomerIdReducer,
       createCustomer: createCustomerReducer,
       updateCustomer: updateCustomerReducer,
+      toggleCustomerStatus: toggleCustomerStatusReducer,
       deleteCustomer: deleteCustomerReducer,
     }),
     products: combineReducers({

@@ -12,76 +12,79 @@ import {
   ReceiptText,
   Tag,
   UserRound,
-} from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { Link, Navigate, useParams } from 'react-router-dom'
-import StatCard from '../components/common/StatCard'
-import { fetchCustomerByCustomerId } from '../features/customers'
-import { formatCurrency } from '../utils/numberFormat'
+} from "lucide-react";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, Navigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import StatCard from "../components/common/StatCard";
+import {
+  fetchCustomerByCustomerId,
+  toggleCustomerStatus,
+} from "../features/customers";
+import { customerStatus } from "../utils/common";
+import { formatCurrency } from "../utils/numberFormat";
 
 const dummyOrders = [
   {
-    orderId: 'QB-ORD-2401',
-    date: '2026-05-28',
+    orderId: "QB-ORD-2401",
+    date: "2026-05-28",
     itemCount: 18,
     totalAmount: 48200,
-    status: 'Delivered',
-    paymentStatus: 'Paid',
+    status: "Delivered",
+    paymentStatus: "Paid",
   },
   {
-    orderId: 'QB-ORD-2367',
-    date: '2026-05-14',
+    orderId: "QB-ORD-2367",
+    date: "2026-05-14",
     itemCount: 9,
     totalAmount: 21950,
-    status: 'Shipped',
-    paymentStatus: 'Pending',
+    status: "Shipped",
+    paymentStatus: "Pending",
   },
   {
-    orderId: 'QB-ORD-2294',
-    date: '2026-04-30',
+    orderId: "QB-ORD-2294",
+    date: "2026-04-30",
     itemCount: 24,
     totalAmount: 65400,
-    status: 'Delivered',
-    paymentStatus: 'Paid',
+    status: "Delivered",
+    paymentStatus: "Paid",
   },
-]
+];
 
 function CustomerView() {
-  const { customerId } = useParams()
-  const dispatch = useDispatch()
-  const [isActive, setIsActive] = useState(true)
+  const { customerId } = useParams();
+  const dispatch = useDispatch();
   const loading = useSelector(
     (state) => state.customers.fetchCustomerByCustomerId.loading,
-  )
+  );
   const loaded = useSelector(
     (state) => state.customers.fetchCustomerByCustomerId.loaded,
-  )
+  );
   const error = useSelector(
     (state) => state.customers.fetchCustomerByCustomerId.error,
-  )
+  );
   const customer = useSelector(
     (state) => state.customers.fetchCustomerByCustomerId.item,
-  )
+  );
+  const statusUpdating = useSelector(
+    (state) => state.customers.toggleCustomerStatus.updating,
+  );
 
   useEffect(() => {
-    dispatch(fetchCustomerByCustomerId(customerId))
-  }, [customerId, dispatch])
-
-  useEffect(() => {
-    setIsActive(true)
-  }, [customerId])
+    dispatch(fetchCustomerByCustomerId(customerId));
+  }, [customerId, dispatch]);
 
   if (loading && !customer) {
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm font-medium text-slate-500 shadow-sm">
         Loading customer details...
       </div>
-    )
+    );
   }
 
   if (loaded && !customer && !error) {
-    return <Navigate to="/customers" replace />
+    return <Navigate to="/customers" replace />;
   }
 
   if (error) {
@@ -89,52 +92,70 @@ function CustomerView() {
       <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center text-sm font-medium text-red-700 shadow-sm">
         {error}
       </div>
-    )
+    );
   }
 
   if (!customer) {
-    return null
+    return null;
   }
 
   const totalOrderValue = dummyOrders.reduce(
     (sum, order) => sum + order.totalAmount,
     0,
-  )
+  );
   const totalOrderItems = dummyOrders.reduce(
     (sum, order) => sum + order.itemCount,
     0,
-  )
+  );
+  const isActive = customer.status === customerStatus.ACTIVE;
 
   const customerStats = [
     {
-      label: 'Customer Type',
-      value: customer.customer_type || '-',
-      change: 'Current customer category',
+      label: "Customer Type",
+      value: customer.customer_type || "-",
+      change: "Current customer category",
       icon: Tag,
-      tone: 'emerald',
+      tone: "emerald",
     },
     {
-      label: 'City',
-      value: customer.city || '-',
-      change: customer.state || 'Location not available',
+      label: "City",
+      value: customer.city || "-",
+      change: customer.state || "Location not available",
       icon: MapPin,
-      tone: 'blue',
+      tone: "blue",
     },
     {
-      label: 'GST Number',
-      value: customer.gst_number || '-',
-      change: 'Tax registration detail',
+      label: "GST Number",
+      value: customer.gst_number || "-",
+      change: "Tax registration detail",
       icon: ReceiptText,
-      tone: 'violet',
+      tone: "violet",
     },
     {
-      label: 'Dummy Orders',
+      label: "Dummy Orders",
       value: String(dummyOrders.length),
       change: `${totalOrderItems} items across placeholder orders`,
       icon: Package,
-      tone: 'amber',
+      tone: "amber",
     },
-  ]
+  ];
+
+  const handleStatusToggle = () => {
+    const nextStatus = isActive ? customerStatus.INACTIVE : customerStatus.ACTIVE;
+
+    dispatch(toggleCustomerStatus({ customerId, nextStatus }))
+      .unwrap()
+      .then(() => {
+        toast.success(
+          `Customer marked ${
+            nextStatus === customerStatus.ACTIVE ? "active" : "inactive"
+          } successfully`,
+        );
+      })
+      .catch((statusError) => {
+        toast.error(statusError || "Unable to update customer status");
+      });
+  };
 
   return (
     <div className="space-y-6">
@@ -186,12 +207,17 @@ function CustomerView() {
             />
             <DetailItem label="City" value={customer.city} icon={MapPin} />
             <DetailItem label="State" value={customer.state} icon={MapPin} />
-            <DetailItem label="Pincode" value={customer.pincode} icon={MapPin} />
+            <DetailItem
+              label="Pincode"
+              value={customer.pincode}
+              icon={MapPin}
+            />
             <SwitchDetailItem
               label="Account Status"
-              value={isActive ? 'Active' : 'Inactive'}
+              value={isActive ? "Active" : "Inactive"}
               checked={isActive}
-              onToggle={() => setIsActive((current) => !current)}
+              loading={statusUpdating}
+              onToggle={handleStatusToggle}
             />
             <DetailItem
               label="GST Number"
@@ -241,7 +267,9 @@ function CustomerView() {
                     <td className="px-4 py-4 text-slate-600">
                       {formatDate(order.date)}
                     </td>
-                    <td className="px-4 py-4 text-slate-600">{order.itemCount}</td>
+                    <td className="px-4 py-4 text-slate-600">
+                      {order.itemCount}
+                    </td>
                     <td className="px-4 py-4 text-slate-600">
                       {formatCurrency(order.totalAmount)}
                     </td>
@@ -249,12 +277,14 @@ function CustomerView() {
                       <div className="flex flex-wrap gap-2">
                         <StatusBadge
                           label={order.status}
-                          tone={order.status === 'Delivered' ? 'emerald' : 'blue'}
+                          tone={
+                            order.status === "Delivered" ? "emerald" : "blue"
+                          }
                         />
                         <StatusBadge
                           label={order.paymentStatus}
                           tone={
-                            order.paymentStatus === 'Paid' ? 'emerald' : 'amber'
+                            order.paymentStatus === "Paid" ? "emerald" : "amber"
                           }
                         />
                       </div>
@@ -275,24 +305,24 @@ function CustomerView() {
         <OrderInfoPanel
           title="Billing Contact"
           icon={Phone}
-          lines={[customer.mobile_number || '-', customer.email || '-']}
+          lines={[customer.mobile_number || "-", customer.email || "-"]}
         />
         <OrderInfoPanel
           title="Shipping Address"
           icon={MapPin}
           lines={[
-            customer.address || '-',
+            customer.address || "-",
             [customer.city, customer.state, customer.pincode]
               .filter(Boolean)
-              .join(', ') || '-',
+              .join(", ") || "-",
           ]}
         />
         <OrderInfoPanel
           title="Last Order Snapshot"
           icon={CalendarDays}
           lines={[
-            `Last order: ${dummyOrders[0]?.orderId || '-'}`,
-            `Date: ${dummyOrders[0] ? formatDate(dummyOrders[0].date) : '-'}`,
+            `Last order: ${dummyOrders[0]?.orderId || "-"}`,
+            `Date: ${dummyOrders[0] ? formatDate(dummyOrders[0].date) : "-"}`,
           ]}
         />
       </section>
@@ -305,8 +335,8 @@ function CustomerView() {
               <p className="text-sm font-semibold">Permanent Delete</p>
             </div>
             <p className="mt-2 text-sm text-red-600">
-              This button is UI only for now. We can connect the permanent delete
-              API later.
+              This button is UI only for now. We can connect the permanent
+              delete API later.
             </p>
           </div>
           <button
@@ -318,7 +348,7 @@ function CustomerView() {
         </div>
       </section>
     </div>
-  )
+  );
 }
 
 function OrderSummaryCard({ label, value, icon: Icon }) {
@@ -330,7 +360,7 @@ function OrderSummaryCard({ label, value, icon: Icon }) {
       </div>
       <p className="mt-2 text-lg font-bold text-slate-950">{value}</p>
     </div>
-  )
+  );
 }
 
 function OrderInfoPanel({ title, icon: Icon, lines }) {
@@ -348,15 +378,15 @@ function OrderInfoPanel({ title, icon: Icon, lines }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 function StatusBadge({ label, tone }) {
   const toneClasses = {
-    emerald: 'bg-emerald-50 text-emerald-700',
-    blue: 'bg-blue-50 text-blue-700',
-    amber: 'bg-amber-50 text-amber-700',
-  }
+    emerald: "bg-emerald-50 text-emerald-700",
+    blue: "bg-blue-50 text-blue-700",
+    amber: "bg-amber-50 text-amber-700",
+  };
 
   return (
     <span
@@ -366,38 +396,38 @@ function StatusBadge({ label, tone }) {
     >
       {label}
     </span>
-  )
+  );
 }
 
 function formatDate(value) {
   if (!value) {
-    return '-'
+    return "-";
   }
 
-  return new Intl.DateTimeFormat('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value))
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
 }
 
 function DetailItem({ label, value, icon: Icon, wide = false }) {
   return (
     <div
       className={`rounded-lg border border-slate-100 bg-slate-50 p-4 ${
-        wide ? 'sm:col-span-2' : ''
+        wide ? "sm:col-span-2" : ""
       }`}
     >
       <div className="flex items-center gap-2 text-slate-400">
         <Icon size={14} />
         <p className="text-xs font-bold uppercase">{label}</p>
       </div>
-      <p className="mt-2 text-sm font-medium text-slate-900">{value || '-'}</p>
+      <p className="mt-2 text-sm font-medium text-slate-900">{value || "-"}</p>
     </div>
-  )
+  );
 }
 
-function SwitchDetailItem({ label, value, checked, onToggle }) {
+function SwitchDetailItem({ label, value, checked, loading, onToggle }) {
   return (
     <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
       <p className="text-xs font-bold uppercase text-slate-400">{label}</p>
@@ -405,8 +435,8 @@ function SwitchDetailItem({ label, value, checked, onToggle }) {
         <span
           className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
             checked
-              ? 'bg-emerald-50 text-emerald-700'
-              : 'bg-slate-100 text-slate-600'
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-slate-100 text-slate-600"
           }`}
         >
           {value}
@@ -414,23 +444,24 @@ function SwitchDetailItem({ label, value, checked, onToggle }) {
         <button
           type="button"
           onClick={onToggle}
+          disabled={loading}
           className={`relative inline-flex h-7 w-14 items-center rounded-full transition focus:outline-none focus:ring-4 ${
             checked
-              ? 'bg-emerald-600 focus:ring-emerald-100'
-              : 'bg-slate-300 focus:ring-slate-200'
-          }`}
+              ? "bg-emerald-600 focus:ring-emerald-100"
+              : "bg-slate-300 focus:ring-slate-200"
+          } ${loading ? "cursor-not-allowed opacity-70" : ""}`}
           aria-pressed={checked}
-          aria-label={`${checked ? 'Deactivate' : 'Activate'} customer`}
+          aria-label={`${checked ? "Deactivate" : "Activate"} customer`}
         >
           <span
             className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition ${
-              checked ? 'translate-x-8' : 'translate-x-1'
+              checked ? "translate-x-8" : "translate-x-1"
             }`}
           />
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default CustomerView
+export default CustomerView;
