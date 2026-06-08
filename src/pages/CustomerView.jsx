@@ -4,6 +4,7 @@ import {
   CalendarDays,
   CreditCard,
   IndianRupee,
+  LockKeyhole,
   Mail,
   MapPin,
   Package,
@@ -12,17 +13,11 @@ import {
   Tag,
   UserRound,
 } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import StatCard from '../components/common/StatCard'
-import {
-  fetchCustomerByCustomerId,
-  selectSelectedCustomer,
-  selectSelectedCustomerError,
-  selectSelectedCustomerLoaded,
-  selectSelectedCustomerLoading,
-} from '../features/customers'
+import { fetchCustomerByCustomerId } from '../features/customers'
 import { formatCurrency } from '../utils/numberFormat'
 
 const dummyOrders = [
@@ -55,14 +50,27 @@ const dummyOrders = [
 function CustomerView() {
   const { customerId } = useParams()
   const dispatch = useDispatch()
-  const loading = useSelector(selectSelectedCustomerLoading)
-  const loaded = useSelector(selectSelectedCustomerLoaded)
-  const error = useSelector(selectSelectedCustomerError)
-  const customer = useSelector(selectSelectedCustomer)
+  const [isActive, setIsActive] = useState(true)
+  const loading = useSelector(
+    (state) => state.customers.fetchCustomerByCustomerId.loading,
+  )
+  const loaded = useSelector(
+    (state) => state.customers.fetchCustomerByCustomerId.loaded,
+  )
+  const error = useSelector(
+    (state) => state.customers.fetchCustomerByCustomerId.error,
+  )
+  const customer = useSelector(
+    (state) => state.customers.fetchCustomerByCustomerId.item,
+  )
 
   useEffect(() => {
     dispatch(fetchCustomerByCustomerId(customerId))
   }, [customerId, dispatch])
+
+  useEffect(() => {
+    setIsActive(true)
+  }, [customerId])
 
   if (loading && !customer) {
     return (
@@ -179,6 +187,12 @@ function CustomerView() {
             <DetailItem label="City" value={customer.city} icon={MapPin} />
             <DetailItem label="State" value={customer.state} icon={MapPin} />
             <DetailItem label="Pincode" value={customer.pincode} icon={MapPin} />
+            <SwitchDetailItem
+              label="Account Status"
+              value={isActive ? 'Active' : 'Inactive'}
+              checked={isActive}
+              onToggle={() => setIsActive((current) => !current)}
+            />
             <DetailItem
               label="GST Number"
               value={customer.gst_number}
@@ -282,6 +296,27 @@ function CustomerView() {
           ]}
         />
       </section>
+
+      <section className="rounded-xl border border-red-200 bg-red-50 p-5 shadow-sm">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <div className="flex items-center gap-2 text-red-700">
+              <LockKeyhole size={16} />
+              <p className="text-sm font-semibold">Permanent Delete</p>
+            </div>
+            <p className="mt-2 text-sm text-red-600">
+              This button is UI only for now. We can connect the permanent delete
+              API later.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-lg bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-200"
+          >
+            Permanently Delete Customer
+          </button>
+        </div>
+      </section>
     </div>
   )
 }
@@ -358,6 +393,42 @@ function DetailItem({ label, value, icon: Icon, wide = false }) {
         <p className="text-xs font-bold uppercase">{label}</p>
       </div>
       <p className="mt-2 text-sm font-medium text-slate-900">{value || '-'}</p>
+    </div>
+  )
+}
+
+function SwitchDetailItem({ label, value, checked, onToggle }) {
+  return (
+    <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
+      <p className="text-xs font-bold uppercase text-slate-400">{label}</p>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <span
+          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+            checked
+              ? 'bg-emerald-50 text-emerald-700'
+              : 'bg-slate-100 text-slate-600'
+          }`}
+        >
+          {value}
+        </span>
+        <button
+          type="button"
+          onClick={onToggle}
+          className={`relative inline-flex h-7 w-14 items-center rounded-full transition focus:outline-none focus:ring-4 ${
+            checked
+              ? 'bg-emerald-600 focus:ring-emerald-100'
+              : 'bg-slate-300 focus:ring-slate-200'
+          }`}
+          aria-pressed={checked}
+          aria-label={`${checked ? 'Deactivate' : 'Activate'} customer`}
+        >
+          <span
+            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition ${
+              checked ? 'translate-x-8' : 'translate-x-1'
+            }`}
+          />
+        </button>
+      </div>
     </div>
   )
 }

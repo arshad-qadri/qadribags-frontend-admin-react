@@ -3,23 +3,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import Button from '../components/common/Button'
-import ConfirmationPopup from '../components/common/ConfirmationPopup'
 import InputBox from '../components/common/InputBox'
 import StatCard from '../components/common/StatCard'
 import CustomersTable from '../components/customers/CustomersTable'
-import {
-  createCustomer,
-  deleteCustomer,
-  fetchCustomers,
-  selectCustomerCreating,
-  selectCustomerDeleting,
-  selectCustomerUpdating,
-  selectCustomers,
-  selectCustomersError,
-  selectCustomersLoaded,
-  selectCustomersLoading,
-  updateCustomer,
-} from '../features/customers'
+import { createCustomer, fetchCustomers, updateCustomer } from '../features/customers'
 
 const emptyForm = {
   name: '',
@@ -35,19 +22,18 @@ const emptyForm = {
 
 function Customers() {
   const dispatch = useDispatch()
-  const customers = useSelector(selectCustomers)
-  const loading = useSelector(selectCustomersLoading)
-  const loaded = useSelector(selectCustomersLoaded)
-  const error = useSelector(selectCustomersError)
-  const creating = useSelector(selectCustomerCreating)
-  const updating = useSelector(selectCustomerUpdating)
-  const deleting = useSelector(selectCustomerDeleting)
+  const customers = useSelector((state) => state.customers.fetchCustomers.items)
+  const loading = useSelector((state) => state.customers.fetchCustomers.loading)
+  const loaded = useSelector((state) => state.customers.fetchCustomers.loaded)
+  const error = useSelector((state) => state.customers.fetchCustomers.error)
+  const creating = useSelector((state) => state.customers.createCustomer.creating)
+  const updating = useSelector((state) => state.customers.updateCustomer.updating)
 
   const [searchTerm, setSearchTerm] = useState('')
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState(null)
-  const [customerToDelete, setCustomerToDelete] = useState(null)
   const [formData, setFormData] = useState(emptyForm)
+  const [customerStatuses, setCustomerStatuses] = useState({})
 
   useEffect(() => {
     if (!loaded) {
@@ -173,20 +159,11 @@ function Customers() {
       })
   }
 
-  const handleDelete = () => {
-    if (!customerToDelete) {
-      return
-    }
-
-    dispatch(deleteCustomer(customerToDelete.id))
-      .unwrap()
-      .then(() => {
-        toast.success(`${customerToDelete.name} deleted successfully`)
-        setCustomerToDelete(null)
-      })
-      .catch((deleteError) => {
-        toast.error(deleteError || 'Unable to delete customer')
-      })
+  const handleStatusToggle = (customer) => {
+    setCustomerStatuses((current) => ({
+      ...current,
+      [customer.customer_id]: !(current[customer.customer_id] ?? true),
+    }))
   }
 
   return (
@@ -247,8 +224,9 @@ function Customers() {
       ) : (
         <CustomersTable
           customers={filteredCustomers}
+          customerStatuses={customerStatuses}
           onEdit={openEditForm}
-          onDelete={setCustomerToDelete}
+          onStatusToggle={handleStatusToggle}
         />
       )}
 
@@ -260,20 +238,6 @@ function Customers() {
         onChange={handleChange}
         onClose={resetForm}
         onSubmit={handleSubmit}
-      />
-
-      <ConfirmationPopup
-        open={Boolean(customerToDelete)}
-        title="Delete Customer"
-        message={
-          customerToDelete
-            ? `Delete ${customerToDelete.name}? This action cannot be undone.`
-            : ''
-        }
-        confirmLabel="Delete Customer"
-        loading={deleting}
-        onCancel={() => setCustomerToDelete(null)}
-        onConfirm={handleDelete}
       />
     </div>
   )
