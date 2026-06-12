@@ -87,7 +87,7 @@ function OrderView() {
         ))}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <section className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <h3 className="text-lg font-bold text-slate-950">Order Items</h3>
           <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">

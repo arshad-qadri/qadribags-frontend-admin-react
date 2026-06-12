@@ -4,6 +4,7 @@ import {
   createCustomerReducer,
   deleteCustomerReducer,
   fetchCustomerByCustomerIdReducer,
+  fetchCustomerOrdersByCustomerIdReducer,
   fetchCustomersReducer,
   toggleCustomerStatusReducer,
   updateCustomerReducer,
@@ -30,6 +31,7 @@ export const store = configureStore({
     customers: combineReducers({
       fetchCustomers: fetchCustomersReducer,
       fetchCustomerByCustomerId: fetchCustomerByCustomerIdReducer,
+      fetchCustomerOrdersByCustomerId: fetchCustomerOrdersByCustomerIdReducer,
       createCustomer: createCustomerReducer,
       updateCustomer: updateCustomerReducer,
       toggleCustomerStatus: toggleCustomerStatusReducer,

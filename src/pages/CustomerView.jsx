@@ -20,37 +20,11 @@ import { toast } from "react-toastify";
 import StatCard from "../components/common/StatCard";
 import {
   fetchCustomerByCustomerId,
+  fetchCustomerOrdersByCustomerId,
   toggleCustomerStatus,
 } from "../features/customers";
 import { customerStatus } from "../utils/common";
 import { formatCurrency } from "../utils/numberFormat";
-
-const dummyOrders = [
-  {
-    orderId: "QB-ORD-2401",
-    date: "2026-05-28",
-    itemCount: 18,
-    totalAmount: 48200,
-    status: "Delivered",
-    paymentStatus: "Paid",
-  },
-  {
-    orderId: "QB-ORD-2367",
-    date: "2026-05-14",
-    itemCount: 9,
-    totalAmount: 21950,
-    status: "Shipped",
-    paymentStatus: "Pending",
-  },
-  {
-    orderId: "QB-ORD-2294",
-    date: "2026-04-30",
-    itemCount: 24,
-    totalAmount: 65400,
-    status: "Delivered",
-    paymentStatus: "Paid",
-  },
-];
 
 function CustomerView() {
   const { customerId } = useParams();
@@ -67,12 +41,22 @@ function CustomerView() {
   const customer = useSelector(
     (state) => state.customers.fetchCustomerByCustomerId.item,
   );
+  const orders = useSelector(
+    (state) => state.customers.fetchCustomerOrdersByCustomerId.items,
+  );
+  const ordersLoading = useSelector(
+    (state) => state.customers.fetchCustomerOrdersByCustomerId.loading,
+  );
+  const ordersError = useSelector(
+    (state) => state.customers.fetchCustomerOrdersByCustomerId.error,
+  );
   const statusUpdating = useSelector(
     (state) => state.customers.toggleCustomerStatus.updating,
   );
 
   useEffect(() => {
     dispatch(fetchCustomerByCustomerId(customerId));
+    dispatch(fetchCustomerOrdersByCustomerId(customerId));
   }, [customerId, dispatch]);
 
   if (loading && !customer) {
@@ -99,12 +83,21 @@ function CustomerView() {
     return null;
   }
 
-  const totalOrderValue = dummyOrders.reduce(
-    (sum, order) => sum + order.totalAmount,
+  const totalOrderValue = orders.reduce(
+    (sum, order) => sum + Number(order.grand_total || 0),
     0,
   );
-  const totalOrderItems = dummyOrders.reduce(
-    (sum, order) => sum + order.itemCount,
+  const totalOrderItems = orders.reduce(
+    (sum, order) =>
+      sum +
+      (order.items || []).reduce(
+        (itemSum, item) => itemSum + Number(item.quantity || 0),
+        0,
+      ),
+    0,
+  );
+  const outstandingPayments = orders.reduce(
+    (sum, order) => sum + Number(order.due_amount || 0),
     0,
   );
   const isActive = customer.status === customerStatus.ACTIVE;
@@ -132,16 +125,18 @@ function CustomerView() {
       tone: "violet",
     },
     {
-      label: "Dummy Orders",
-      value: String(dummyOrders.length),
-      change: `${totalOrderItems} items across placeholder orders`,
+      label: "Orders",
+      value: String(orders.length),
+      change: `${totalOrderItems} items across customer orders`,
       icon: Package,
       tone: "amber",
     },
   ];
 
   const handleStatusToggle = () => {
-    const nextStatus = isActive ? customerStatus.INACTIVE : customerStatus.ACTIVE;
+    const nextStatus = isActive
+      ? customerStatus.INACTIVE
+      : customerStatus.ACTIVE;
 
     dispatch(toggleCustomerStatus({ customerId, nextStatus }))
       .unwrap()
@@ -175,12 +170,6 @@ function CustomerView() {
             {customer.customer_id} | Customer profile and account details.
           </p>
         </div>
-        <div className="rounded-xl bg-emerald-50 px-5 py-4 text-sm text-emerald-900">
-          <p className="font-semibold">Order module placeholder</p>
-          <p className="mt-1 text-emerald-700">
-            Showing hardcoded order data until orders API is connected.
-          </p>
-        </div>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -189,8 +178,92 @@ function CustomerView() {
         ))}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <section className="">
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-slate-950">Orders</h3>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <OrderSummaryCard
+              label="Total Order Value"
+              value={formatCurrency(totalOrderValue)}
+              icon={IndianRupee}
+            />
+            <OrderSummaryCard
+              label="Outstanding Payments"
+              value={formatCurrency(outstandingPayments)}
+              icon={CreditCard}
+            />
+          </div>
+
+          {ordersLoading ? (
+            <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-sm font-medium text-slate-500">
+              Loading customer orders...
+            </div>
+          ) : ordersError ? (
+            <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm font-medium text-red-700">
+              {ordersError}
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+              <p className="text-sm font-semibold text-slate-900">
+                No orders available
+              </p>
+              <p className="mt-2 text-sm text-slate-500">
+                This customer does not have any orders yet.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                  <tr>
+                    <th className="px-4 py-3 font-bold">Order ID</th>
+                    <th className="px-4 py-3 font-bold">Date</th>
+                    <th className="px-4 py-3 font-bold">Items</th>
+                    <th className="px-4 py-3 font-bold">Amount</th>
+                    <th className="px-4 py-3 font-bold">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {orders.map((order) => (
+                    <tr key={order.id} className="bg-white">
+                      <td className="px-4 py-4 font-semibold text-slate-900">
+                        {order.order_number}
+                      </td>
+                      <td className="px-4 py-4 text-slate-600">
+                        {formatDate(order.created_at)}
+                      </td>
+                      <td className="px-4 py-4 text-slate-600">
+                        {(order.items || []).reduce(
+                          (sum, item) => sum + Number(item.quantity || 0),
+                          0,
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-slate-600">
+                        {formatCurrency(order.grand_total)}
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex flex-wrap gap-2">
+                          <StatusBadge label={order.status} tone="blue" />
+                          <StatusBadge
+                            label={formatPaymentStatus(order.payment_status)}
+                            tone={
+                              order.payment_status === "PAID"
+                                ? "emerald"
+                                : order.payment_status === "PARTIAL"
+                                  ? "amber"
+                                  : "red"
+                            }
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm mt-6">
           <h3 className="text-lg font-bold text-slate-950">Customer Details</h3>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <DetailItem label="Name" value={customer.name} icon={UserRound} />
@@ -232,73 +305,6 @@ function CustomerView() {
             />
           </div>
         </div>
-
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-950">Orders</h3>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <OrderSummaryCard
-              label="Total Order Value"
-              value={formatCurrency(totalOrderValue)}
-              icon={IndianRupee}
-            />
-            <OrderSummaryCard
-              label="Outstanding Payments"
-              value="Rs 21,950"
-              icon={CreditCard}
-            />
-          </div>
-          <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-                <tr>
-                  <th className="px-4 py-3 font-bold">Order ID</th>
-                  <th className="px-4 py-3 font-bold">Date</th>
-                  <th className="px-4 py-3 font-bold">Items</th>
-                  <th className="px-4 py-3 font-bold">Amount</th>
-                  <th className="px-4 py-3 font-bold">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {dummyOrders.map((order) => (
-                  <tr key={order.orderId} className="bg-white">
-                    <td className="px-4 py-4 font-semibold text-slate-900">
-                      {order.orderId}
-                    </td>
-                    <td className="px-4 py-4 text-slate-600">
-                      {formatDate(order.date)}
-                    </td>
-                    <td className="px-4 py-4 text-slate-600">
-                      {order.itemCount}
-                    </td>
-                    <td className="px-4 py-4 text-slate-600">
-                      {formatCurrency(order.totalAmount)}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex flex-wrap gap-2">
-                        <StatusBadge
-                          label={order.status}
-                          tone={
-                            order.status === "Delivered" ? "emerald" : "blue"
-                          }
-                        />
-                        <StatusBadge
-                          label={order.paymentStatus}
-                          tone={
-                            order.paymentStatus === "Paid" ? "emerald" : "amber"
-                          }
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-3 text-xs text-slate-500">
-            These orders are hardcoded placeholders for UI work. We can replace
-            them with live data once the orders endpoint is ready.
-          </p>
-        </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
@@ -320,10 +326,14 @@ function CustomerView() {
         <OrderInfoPanel
           title="Last Order Snapshot"
           icon={CalendarDays}
-          lines={[
-            `Last order: ${dummyOrders[0]?.orderId || "-"}`,
-            `Date: ${dummyOrders[0] ? formatDate(dummyOrders[0].date) : "-"}`,
-          ]}
+          lines={
+            orders.length > 0
+              ? [
+                  `Last order: ${orders[0].order_number}`,
+                  `Date: ${formatDate(orders[0].created_at)}`,
+                ]
+              : ["Last order: -", "Date: -"]
+          }
         />
       </section>
 
@@ -386,6 +396,7 @@ function StatusBadge({ label, tone }) {
     emerald: "bg-emerald-50 text-emerald-700",
     blue: "bg-blue-50 text-blue-700",
     amber: "bg-amber-50 text-amber-700",
+    red: "bg-red-50 text-red-700",
   };
 
   return (
@@ -409,6 +420,14 @@ function formatDate(value) {
     month: "short",
     year: "numeric",
   }).format(new Date(value));
+}
+
+function formatPaymentStatus(value) {
+  if (!value) {
+    return "-";
+  }
+
+  return value.replace(/_/g, " ");
 }
 
 function DetailItem({ label, value, icon: Icon, wide = false }) {
