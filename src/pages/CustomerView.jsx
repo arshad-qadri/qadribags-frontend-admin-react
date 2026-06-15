@@ -20,6 +20,7 @@ import { toast } from "react-toastify";
 import StatCard from "../components/common/StatCard";
 import {
   fetchCustomerByCustomerId,
+  fetchCustomerOrderValue,
   fetchCustomerOrdersByCustomerId,
   toggleCustomerStatus,
 } from "../features/customers";
@@ -44,6 +45,15 @@ function CustomerView() {
   const orders = useSelector(
     (state) => state.customers.fetchCustomerOrdersByCustomerId.items,
   );
+  const orderValue = useSelector(
+    (state) => state.customers.fetchCustomerOrderValue.item,
+  );
+  const orderValueLoading = useSelector(
+    (state) => state.customers.fetchCustomerOrderValue.loading,
+  );
+  const orderValueError = useSelector(
+    (state) => state.customers.fetchCustomerOrderValue.error,
+  );
   const ordersLoading = useSelector(
     (state) => state.customers.fetchCustomerOrdersByCustomerId.loading,
   );
@@ -56,6 +66,7 @@ function CustomerView() {
 
   useEffect(() => {
     dispatch(fetchCustomerByCustomerId(customerId));
+    dispatch(fetchCustomerOrderValue(customerId));
     dispatch(fetchCustomerOrdersByCustomerId(customerId));
   }, [customerId, dispatch]);
 
@@ -83,10 +94,6 @@ function CustomerView() {
     return null;
   }
 
-  const totalOrderValue = orders.reduce(
-    (sum, order) => sum + Number(order.grand_total || 0),
-    0,
-  );
   const totalOrderItems = orders.reduce(
     (sum, order) =>
       sum +
@@ -96,11 +103,9 @@ function CustomerView() {
       ),
     0,
   );
-  const outstandingPayments = orders.reduce(
-    (sum, order) => sum + Number(order.due_amount || 0),
-    0,
-  );
   const isActive = customer.status === customerStatus.ACTIVE;
+  const totalOrderValue = formatCurrency(orderValue?.order_value ?? 0);
+  const outstandingPayments = formatCurrency(orderValue?.due_amount ?? 0);
 
   const customerStats = [
     {
@@ -184,13 +189,17 @@ function CustomerView() {
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <OrderSummaryCard
               label="Total Order Value"
-              value={formatCurrency(totalOrderValue)}
+              value={totalOrderValue}
               icon={IndianRupee}
+              loading={orderValueLoading}
+              error={orderValueError}
             />
             <OrderSummaryCard
               label="Outstanding Payments"
-              value={formatCurrency(outstandingPayments)}
+              value={outstandingPayments}
               icon={CreditCard}
+              loading={orderValueLoading}
+              error={orderValueError}
             />
           </div>
 
@@ -361,14 +370,17 @@ function CustomerView() {
   );
 }
 
-function OrderSummaryCard({ label, value, icon: Icon }) {
+function OrderSummaryCard({ label, value, icon: Icon, loading, error }) {
   return (
     <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
       <div className="flex items-center gap-2 text-slate-400">
         <Icon size={15} />
         <p className="text-xs font-bold uppercase">{label}</p>
       </div>
-      <p className="mt-2 text-lg font-bold text-slate-950">{value}</p>
+      <p className="mt-2 text-lg font-bold text-slate-950">
+        {loading ? "Loading..." : value}
+      </p>
+      {error ? <p className="mt-1 text-xs text-red-600">{error}</p> : null}
     </div>
   );
 }
