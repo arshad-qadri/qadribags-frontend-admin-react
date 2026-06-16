@@ -2,11 +2,13 @@ import { ArrowLeft } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import CheckoutSummaryCard from '../components/orders/CheckoutSummaryCard'
 import ConfirmOrderModal from '../components/orders/ConfirmOrderModal'
 import OrderDetailsCard from '../components/orders/OrderDetailsCard'
 import OrderItemsSection from '../components/orders/OrderItemsSection'
 import { fetchCustomers } from '../features/customers'
+import { createOrder } from '../features/orders'
 import { fetchProducts } from '../features/products/fetchProducts'
 
 function createEmptyItem() {
@@ -22,6 +24,7 @@ function OrderCreate() {
   const customersLoaded = useSelector((state) => state.customers.fetchCustomers.loaded)
   const products = useSelector((state) => state.products.fetchProducts.items)
   const productsLoaded = useSelector((state) => state.products.fetchProducts.loaded)
+  const creatingOrder = useSelector((state) => state.orders.createOrder.creating)
 
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
   const [paymentStatus, setPaymentStatus] = useState('')
@@ -167,6 +170,36 @@ function OrderCreate() {
     )
   }
 
+  const handleCreateOrder = () => {
+    const payload = {
+      customer_id: selectedCustomerId,
+      payment_type: paymentStatus.toLowerCase(),
+      payment_mode: paymentStatus === 'Credit' ? '' : paymentMode,
+      amount_paying:
+        paymentStatus === 'Credit' ? '' : paymentAmount ? Number(paymentAmount) : '',
+      order_items: selectedOrderItems.map((item) => ({
+        sku: item.sku,
+        quantity: item.quantity,
+      })),
+    }
+
+    dispatch(createOrder(payload))
+      .unwrap()
+      .then((createdOrder) => {
+        toast.success(createdOrder?.order_number || 'Order created successfully')
+        setIsConfirmOpen(false)
+        setSelectedCustomerId('')
+        setPaymentStatus('')
+        setPaymentAmount('')
+        setPaymentMode('')
+        setOrderItems([createEmptyItem()])
+        setShowValidation(false)
+      })
+      .catch((error) => {
+        toast.error(error || 'Unable to create order')
+      })
+  }
+
   return (
     <div className="space-y-6">
       <section className="flex flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm xl:flex-row xl:items-center">
@@ -232,6 +265,8 @@ function OrderCreate() {
         paymentType={paymentStatus}
         paymentAmount={paymentAmount}
         paymentMode={paymentMode}
+        creating={creatingOrder}
+        onCreateOrder={handleCreateOrder}
         onClose={() => setIsConfirmOpen(false)}
       />
     </div>

@@ -10,6 +10,8 @@ function ConfirmOrderModal({
   paymentType,
   paymentAmount,
   paymentMode,
+  creating,
+  onCreateOrder,
   onClose,
 }) {
   if (!open) {
@@ -39,23 +41,27 @@ function ConfirmOrderModal({
 
         <div className="mt-8 grid h-[calc(88vh-11rem)] gap-8 lg:grid-cols-[1.45fr_0.95fr]">
           <div className="overflow-hidden rounded-2xl border border-slate-200">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-                <tr>
-                  <th className="px-4 py-3 font-bold">Product</th>
-                  <th className="px-4 py-3 font-bold">Qty</th>
-                  <th className="px-4 py-3 font-bold">Price</th>
-                  <th className="px-4 py-3 font-bold">Total</th>
-                </tr>
-              </thead>
-            </table>
             <div className="max-h-[calc(88vh-14rem)] overflow-y-auto">
-              <table className="w-full text-left text-sm">
+              <table className="w-full table-fixed text-left text-sm">
+                <colgroup>
+                  <col className="w-[52%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[18%]" />
+                  <col className="w-[20%]" />
+                </colgroup>
+                <thead className="sticky top-0 z-10 bg-slate-50 text-xs uppercase text-slate-500">
+                  <tr>
+                    <th className="px-6 py-4 font-bold">Product</th>
+                    <th className="px-4 py-4 font-bold">Qty</th>
+                    <th className="px-4 py-4 font-bold">Price</th>
+                    <th className="px-4 py-4 font-bold">Total</th>
+                  </tr>
+                </thead>
                 <tbody className="divide-y divide-slate-100">
                   {items.length > 0 ? (
                     items.map((item) => (
                       <tr key={`${item.sku}-${item.quantity}`} className="bg-white">
-                        <td className="px-4 py-4">
+                        <td className="px-6 py-4">
                           <p className="font-semibold text-slate-900">{item.name}</p>
                           <p className="mt-1 text-xs text-slate-500">{item.sku}</p>
                         </td>
@@ -117,7 +123,9 @@ function ConfirmOrderModal({
             </div>
 
             <div className="mt-8">
-              <Button className="w-full">Create Order</Button>
+              <Button className="w-full" onClick={onCreateOrder} disabled={creating}>
+                {creating ? 'Creating Order...' : 'Create Order'}
+              </Button>
             </div>
           </div>
         </div>

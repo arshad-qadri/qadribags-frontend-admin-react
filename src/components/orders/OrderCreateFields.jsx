@@ -7,10 +7,13 @@ export function Input({
   value = '',
   onChange = () => {},
   error = '',
+  hideLabel = false,
 }) {
   return (
     <label className="block space-y-2">
-      <span className="text-sm font-medium text-slate-700">{label}</span>
+      {hideLabel ? null : (
+        <span className="text-sm font-medium text-slate-700">{label}</span>
+      )}
       <input
         type={type}
         value={value}
@@ -34,10 +37,13 @@ export function SelectInput({
   options,
   placeholder,
   error = '',
+  hideLabel = false,
 }) {
   return (
     <label className="block space-y-2">
-      <span className="text-sm font-medium text-slate-700">{label}</span>
+      {hideLabel ? null : (
+        <span className="text-sm font-medium text-slate-700">{label}</span>
+      )}
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -192,11 +198,13 @@ export function RadioGroup({ label, value, onChange, options, error = '' }) {
   )
 }
 
-export function ReadOnlyField({ label, value }) {
+export function ReadOnlyField({ label, value, hideLabel = false }) {
   return (
     <div className="space-y-2">
-      <span className="block text-sm font-medium text-slate-700">{label}</span>
-      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+      {hideLabel ? null : (
+        <span className="block text-sm font-medium text-slate-700">{label}</span>
+      )}
+      <div className="overflow-hidden text-ellipsis whitespace-nowrap rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
         {value}
       </div>
     </div>

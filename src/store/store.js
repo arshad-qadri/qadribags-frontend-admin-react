@@ -11,6 +11,12 @@ import {
   updateCustomerReducer,
 } from "../features/customers";
 import {
+  createOrderReducer,
+  fetchOrderByOrderNumberReducer,
+  fetchOrdersReducer,
+  updateOrderReducer,
+} from "../features/orders";
+import {
   createProductReducer,
   deleteProductImageReducer,
   fetchProductBySkuReducer,
@@ -47,6 +53,12 @@ export const store = configureStore({
       toggleProductStatus: toggleProductStatusReducer,
       uploadProductImage: uploadProductImageReducer,
       deleteProductImage: deleteProductImageReducer,
+    }),
+    orders: combineReducers({
+      fetchOrderByOrderNumber: fetchOrderByOrderNumberReducer,
+      fetchOrders: fetchOrdersReducer,
+      createOrder: createOrderReducer,
+      updateOrder: updateOrderReducer,
     }),
     inventory: combineReducers({
       lowStockAlerts: lowStockAlertsReducer,

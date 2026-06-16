@@ -17,6 +17,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import Badge from "../components/common/Badge";
 import StatCard from "../components/common/StatCard";
 import {
   fetchCustomerByCustomerId,
@@ -26,6 +27,7 @@ import {
 } from "../features/customers";
 import { customerStatus } from "../utils/common";
 import { formatCurrency } from "../utils/numberFormat";
+import { formatDate, formatPaymentStatus } from "../utils/orderFormat";
 
 function CustomerView() {
   const { customerId } = useParams();
@@ -412,34 +414,11 @@ function StatusBadge({ label, tone }) {
   };
 
   return (
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-        toneClasses[tone] || toneClasses.blue
-      }`}
-    >
-      {label}
-    </span>
+    <Badge
+      label={label}
+      className={`${toneClasses[tone] || toneClasses.blue}`}
+    />
   );
-}
-
-function formatDate(value) {
-  if (!value) {
-    return "-";
-  }
-
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(value));
-}
-
-function formatPaymentStatus(value) {
-  if (!value) {
-    return "-";
-  }
-
-  return value.replace(/_/g, " ");
 }
 
 function DetailItem({ label, value, icon: Icon, wide = false }) {

@@ -28,11 +28,28 @@ function OrderItemsSection({
         </button>
       </div>
 
-      <div className="mt-5 max-h-[520px] overflow-y-auto pr-2">
+      <div className="mt-5 max-h-[460px] overflow-y-auto pr-2">
+        <div className="mb-3 hidden items-center gap-4 px-4 text-sm font-semibold text-slate-700 md:grid md:grid-cols-[1.8fr_0.7fr_0.8fr_0.9fr_0.9fr_auto]">
+          <div>Product</div>
+          <div>Quantity</div>
+          <div>Stock</div>
+          <div>Price</div>
+          <div>Total</div>
+          <div />
+        </div>
         <div className="grid gap-4">
           {orderItems.map((item, index) => {
             const selectedProduct = productOptions.find(
               (product) => product.sku === item.productSku,
+            )
+            const selectedSkusInOtherRows = orderItems
+              .filter((_, itemIndex) => itemIndex !== index)
+              .map((orderItem) => orderItem.productSku)
+              .filter(Boolean)
+            const availableProductOptions = productOptions.filter(
+              (product) =>
+                product.sku === item.productSku ||
+                !selectedSkusInOtherRows.includes(product.sku),
             )
             const quantity = Number(item.quantity || 0)
             const lineTotal = (selectedProduct?.price || 0) * quantity
@@ -42,12 +59,16 @@ function OrderItemsSection({
                 key={`order-item-${index}`}
                 className="rounded-xl border border-slate-200 bg-slate-50 p-4"
               >
+                <div className="mb-3 text-sm font-semibold text-slate-700 md:hidden">
+                  Product {index + 1}
+                </div>
                 <div className="grid gap-4 md:grid-cols-[1.8fr_0.7fr_0.8fr_0.9fr_0.9fr_auto]">
                   <SelectInput
                     label={`Product ${index + 1}`}
+                    hideLabel
                     value={item.productSku}
                     onChange={(value) => onItemChange(index, 'productSku', value)}
-                    options={productOptions.map((product) => ({
+                    options={availableProductOptions.map((product) => ({
                       value: product.sku,
                       label: product.label,
                     }))}
@@ -60,6 +81,7 @@ function OrderItemsSection({
                   />
                   <Input
                     label="Quantity"
+                    hideLabel
                     placeholder="1"
                     value={item.quantity}
                     onChange={(value) => onItemChange(index, 'quantity', value)}
@@ -71,16 +93,19 @@ function OrderItemsSection({
                   />
                   <ReadOnlyField
                     label="Stock"
+                    hideLabel
                     value={selectedProduct ? String(selectedProduct.stock) : 'Select product'}
                   />
                   <ReadOnlyField
                     label="Price"
+                    hideLabel
                     value={
                       selectedProduct ? formatCurrency(selectedProduct.price) : 'Select product'
                     }
                   />
                   <ReadOnlyField
                     label="Total"
+                    hideLabel
                     value={selectedProduct ? formatCurrency(lineTotal) : 'Select product'}
                   />
                   <div className="flex items-end">

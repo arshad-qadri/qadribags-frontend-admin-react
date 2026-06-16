@@ -8,44 +8,71 @@ import {
   TimerReset,
   Eye,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
+import Badge from '../components/common/Badge'
 import StatCard from '../components/common/StatCard'
+import { fetchOrders } from '../features/orders'
 import { formatCurrency } from '../utils/numberFormat'
-import { ordersData, orderStatusStyles, paymentStatusStyles } from './ordersData'
+import {
+  formatDate,
+  formatOrderStatus,
+  formatPaymentStatus,
+} from '../utils/orderFormat'
+import { orderStatusStyles, paymentStatusStyles } from './ordersData'
 
 function Orders() {
+  const dispatch = useDispatch()
   const [searchTerm, setSearchTerm] = useState('')
+  const orders = useSelector((state) => state.orders.fetchOrders.items)
+  const loading = useSelector((state) => state.orders.fetchOrders.loading)
+  const loaded = useSelector((state) => state.orders.fetchOrders.loaded)
+  const error = useSelector((state) => state.orders.fetchOrders.error)
+
+  useEffect(() => {
+    if (!loaded) {
+      dispatch(fetchOrders())
+    }
+  }, [dispatch, loaded])
 
   const filteredOrders = useMemo(() => {
     const query = searchTerm.trim().toLowerCase()
 
-    return ordersData.filter((order) => {
+    return orders.filter((order) => {
+      const customer = order.customer_details?.name || ''
+      const customerId = order.customer_id || ''
+      const city = order.customer_details?.city || ''
+
       if (!query) {
         return true
       }
 
       return [
-        order.id,
-        order.customer,
-        order.customerId,
-        order.city,
+        order.order_number,
+        customer,
+        customerId,
+        city,
         order.status,
         order.paymentStatus,
+        order.payment_status,
       ]
         .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(query))
+        .some((value) => String(value).toLowerCase().includes(query))
     })
-  }, [searchTerm])
+  }, [orders, searchTerm])
 
-  const deliveredOrders = ordersData.filter((order) => order.status === 'Delivered').length
-  const pendingOrders = ordersData.filter((order) => order.paymentStatus !== 'Paid').length
-  const totalRevenue = ordersData.reduce((sum, order) => sum + order.amount, 0)
+  const confirmedOrders = orders.filter((order) => order.status === 'CONFIRMED').length
+  const pendingPayments = orders.filter((order) => order.payment_status !== 'PAID').length
+  const totalRevenue = orders.reduce(
+    (sum, order) => sum + Number(order.grand_total || 0),
+    0,
+  )
 
   const stats = [
     {
       label: 'Total Orders',
-      value: String(ordersData.length),
+      value: String(orders.length),
       change: `${filteredOrders.length} orders visible`,
       icon: ClipboardList,
       tone: 'emerald',
@@ -58,15 +85,15 @@ function Orders() {
       tone: 'blue',
     },
     {
-      label: 'Delivered',
-      value: String(deliveredOrders),
-      change: 'Completed shipments in static data',
+      label: 'Confirmed',
+      value: String(confirmedOrders),
+      change: 'Orders confirmed in live data',
       icon: PackageCheck,
       tone: 'violet',
     },
     {
       label: 'Pending Payments',
-      value: String(pendingOrders),
+      value: String(pendingPayments),
       change: 'Orders awaiting full settlement',
       icon: TimerReset,
       tone: 'amber',
@@ -81,8 +108,7 @@ function Orders() {
             <p className="text-sm font-semibold text-emerald-700">Orders</p>
             <h2 className="mt-2 text-2xl font-bold text-slate-950">Order Management</h2>
             <p className="mt-2 text-sm text-slate-500">
-              Static order pages for now. We can wire live APIs later without changing
-              the overall layout.
+              Manage live orders, track payment state, and review customer purchases.
             </p>
           </div>
           <Link
@@ -118,97 +144,97 @@ function Orders() {
       </section>
 
       <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1180px] text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-              <tr>
-                <th className="px-5 py-4 font-bold">Order ID</th>
-                <th className="px-5 py-4 font-bold">Customer</th>
-                <th className="px-5 py-4 font-bold">Date</th>
-                <th className="px-5 py-4 font-bold">Location</th>
-                <th className="px-5 py-4 font-bold">Items</th>
-                <th className="px-5 py-4 font-bold">Amount</th>
-                <th className="px-5 py-4 font-bold">Payment</th>
-                <th className="px-5 py-4 font-bold">Status</th>
-                <th className="px-5 py-4 text-right font-bold">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredOrders.map((order) => (
-                <tr key={order.id} className="bg-white hover:bg-slate-50">
-                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-900">
-                    {order.id}
-                  </td>
-                  <td className="px-5 py-4">
-                    <p className="font-medium text-slate-900">{order.customer}</p>
-                    <p className="mt-1 text-xs text-slate-500">{order.customerId}</p>
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-4 text-slate-600">
-                    {formatDate(order.placedOn)}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-4 text-slate-600">
-                    {order.city}, {order.state}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-4 text-slate-600">
-                    {order.itemCount}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-4 text-slate-600">
-                    {formatCurrency(order.amount)}
-                  </td>
-                  <td className="px-5 py-4">
-                    <Badge
-                      label={order.paymentStatus}
-                      className={paymentStatusStyles[order.paymentStatus]}
-                    />
-                  </td>
-                  <td className="px-5 py-4">
-                    <Badge
-                      label={order.status}
-                      className={orderStatusStyles[order.status]}
-                    />
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex justify-end gap-2">
-                      <Link
-                        to={`/orders/${order.id}`}
-                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 focus:outline-none focus:ring-4 focus:ring-emerald-100"
-                        aria-label={`View ${order.id}`}
-                      >
-                        <Eye size={16} />
-                      </Link>
-                      <Link
-                        to={`/orders/${order.id}/edit`}
-                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-slate-200"
-                        aria-label={`Edit ${order.id}`}
-                      >
-                        <Edit size={16} />
-                      </Link>
-                    </div>
-                  </td>
+        {loading ? (
+          <div className="p-8 text-center text-sm font-medium text-slate-500">
+            Loading orders...
+          </div>
+        ) : error ? (
+          <div className="p-8 text-center text-sm font-medium text-red-700">{error}</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1180px] text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                <tr>
+                  <th className="px-5 py-4 font-bold">Order ID</th>
+                  <th className="px-5 py-4 font-bold">Customer</th>
+                  <th className="px-5 py-4 font-bold">Date</th>
+                  <th className="px-5 py-4 font-bold">Location</th>
+                  <th className="px-5 py-4 font-bold">Items</th>
+                  <th className="px-5 py-4 font-bold">Amount</th>
+                  <th className="px-5 py-4 font-bold">Payment</th>
+                  <th className="px-5 py-4 font-bold">Status</th>
+                  <th className="px-5 py-4 text-right font-bold">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredOrders.map((order) => {
+                  const paymentLabel = formatPaymentStatus(order.payment_status)
+                  const paymentTone =
+                    paymentStatusStyles[paymentLabel] || 'bg-slate-100 text-slate-700'
+                  const orderLabel = formatOrderStatus(order.status)
+                  const orderTone =
+                    orderStatusStyles[orderLabel] || 'bg-slate-100 text-slate-700'
+
+                  return (
+                    <tr key={order.id} className="bg-white hover:bg-slate-50">
+                      <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-900">
+                        {order.order_number}
+                      </td>
+                      <td className="px-5 py-4">
+                        <p className="font-medium text-slate-900">
+                          {order.customer_details?.name || '-'}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">{order.customer_id}</p>
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 text-slate-600">
+                        {formatDate(order.created_at)}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 text-slate-600">
+                        {order.customer_details?.city || '-'}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 text-slate-600">
+                        {(order.items || []).reduce(
+                          (sum, item) => sum + Number(item.quantity || 0),
+                          0,
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 text-slate-600">
+                        {formatCurrency(order.grand_total)}
+                      </td>
+                      <td className="px-5 py-4">
+                        <Badge label={paymentLabel} className={paymentTone} />
+                      </td>
+                      <td className="px-5 py-4">
+                        <Badge label={orderLabel} className={orderTone} />
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex justify-end gap-2">
+                          <Link
+                            to={`/orders/${order.order_number}`}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                            aria-label={`View ${order.order_number}`}
+                          >
+                            <Eye size={16} />
+                          </Link>
+                          <Link
+                            to={`/orders/${order.order_number}/edit`}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-slate-200"
+                            aria-label={`Edit ${order.order_number}`}
+                          >
+                            <Edit size={16} />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   )
-}
-
-function Badge({ label, className }) {
-  return (
-    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${className}`}>
-      {label}
-    </span>
-  )
-}
-
-function formatDate(value) {
-  return new Intl.DateTimeFormat('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value))
 }
 
 export default Orders

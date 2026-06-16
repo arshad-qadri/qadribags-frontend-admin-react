@@ -3,51 +3,102 @@ import {
   BadgeIndianRupee,
   CalendarDays,
   CreditCard,
+  Landmark,
   MapPin,
   Package,
   Phone,
   Store,
   UserRound,
 } from 'lucide-react'
+import { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import Badge from '../components/common/Badge'
 import StatCard from '../components/common/StatCard'
+import { fetchOrderByOrderNumber } from '../features/orders'
 import { formatCurrency } from '../utils/numberFormat'
-import { ordersData, orderStatusStyles, paymentStatusStyles } from './ordersData'
+import {
+  formatDate,
+  formatOrderStatus,
+  formatPaymentStatus,
+  formatPaymentType,
+} from '../utils/orderFormat'
+import { orderStatusStyles, paymentStatusStyles } from './ordersData'
 
 function OrderView() {
+  const dispatch = useDispatch()
   const { orderId } = useParams()
-  const order = ordersData.find((entry) => entry.id === orderId)
+  const order = useSelector((state) => state.orders.fetchOrderByOrderNumber.item)
+  const loading = useSelector((state) => state.orders.fetchOrderByOrderNumber.loading)
+  const loaded = useSelector((state) => state.orders.fetchOrderByOrderNumber.loaded)
+  const error = useSelector((state) => state.orders.fetchOrderByOrderNumber.error)
 
-  if (!order) {
+  useEffect(() => {
+    if (orderId) {
+      dispatch(fetchOrderByOrderNumber(orderId))
+    }
+  }, [dispatch, orderId])
+
+  if (loading && !order) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm font-medium text-slate-500 shadow-sm">
+        Loading order details...
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center text-sm font-medium text-red-700 shadow-sm">
+        {error}
+      </div>
+    )
+  }
+
+  if (loaded && !order) {
     return <Navigate to="/orders" replace />
   }
+
+  if (!order) {
+    return null
+  }
+
+  const itemCount = (order.items || []).reduce(
+    (sum, item) => sum + Number(item.quantity || 0),
+    0,
+  )
+  const paymentLabel = formatPaymentStatus(order.payment_status)
+  const paymentTone =
+    paymentStatusStyles[paymentLabel] || 'bg-slate-100 text-slate-700'
+  const orderLabel = formatOrderStatus(order.status)
+  const orderTone = orderStatusStyles[orderLabel] || 'bg-slate-100 text-slate-700'
 
   const stats = [
     {
       label: 'Order Amount',
-      value: formatCurrency(order.amount),
-      change: `${order.itemCount} items in this order`,
+      value: formatCurrency(order.grand_total),
+      change: `${itemCount} items in this order`,
       icon: BadgeIndianRupee,
       tone: 'emerald',
     },
     {
-      label: 'Order Status',
-      value: order.status,
-      change: 'Static tracking status',
-      icon: Package,
+      label: 'Due Amount',
+      value: formatCurrency(order.due_amount),
+      change: order.due_amount > 0 ? 'Pending collection amount' : 'No outstanding balance',
+      icon: Landmark,
       tone: 'blue',
     },
     {
       label: 'Payment Status',
-      value: order.paymentStatus,
-      change: 'Static settlement preview',
+      value: paymentLabel,
+      change: 'Live settlement status',
       icon: CreditCard,
       tone: 'violet',
     },
     {
-      label: 'Delivery Date',
-      value: formatDate(order.deliveryDate),
-      change: 'Expected delivery timeline',
+      label: 'Created On',
+      value: formatDate(order.created_at),
+      change: 'Order creation timestamp',
       icon: CalendarDays,
       tone: 'amber',
     },
@@ -64,20 +115,16 @@ function OrderView() {
             <ArrowLeft size={17} />
             Back to orders
           </Link>
-          <h2 className="mt-3 text-2xl font-bold text-slate-950">{order.id}</h2>
+          <h2 className="mt-3 text-2xl font-bold text-slate-950">
+            {order.order_number}
+          </h2>
           <p className="mt-2 text-sm text-slate-500">
-            Static order detail page for layout and flow preview.
+            Live order details fetched from the orders API.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Badge
-            label={order.status}
-            className={orderStatusStyles[order.status]}
-          />
-          <Badge
-            label={order.paymentStatus}
-            className={paymentStatusStyles[order.paymentStatus]}
-          />
+          <Badge label={orderLabel} className={orderTone} />
+          <Badge label={paymentLabel} className={paymentTone} />
         </div>
       </section>
 
@@ -87,62 +134,75 @@ function OrderView() {
         ))}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-950">Order Items</h3>
-          <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-                <tr>
-                  <th className="px-4 py-3 font-bold">SKU</th>
-                  <th className="px-4 py-3 font-bold">Product</th>
-                  <th className="px-4 py-3 font-bold">Qty</th>
-                  <th className="px-4 py-3 font-bold">Price</th>
-                  <th className="px-4 py-3 font-bold">Total</th>
+      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-950">Order Items</h3>
+        <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+              <tr>
+                <th className="px-4 py-3 font-bold">SKU</th>
+                <th className="px-4 py-3 font-bold">Product</th>
+                <th className="px-4 py-3 font-bold">Qty</th>
+                <th className="px-4 py-3 font-bold">Price</th>
+                <th className="px-4 py-3 font-bold">Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {(order.items || []).map((item) => (
+                <tr key={item.sku} className="bg-white">
+                  <td className="px-4 py-4 font-medium text-slate-700">{item.sku}</td>
+                  <td className="px-4 py-4 text-slate-700">{item.name}</td>
+                  <td className="px-4 py-4 text-slate-600">{item.quantity}</td>
+                  <td className="px-4 py-4 text-slate-600">
+                    {formatCurrency(item.price)}
+                  </td>
+                  <td className="px-4 py-4 font-semibold text-slate-900">
+                    {formatCurrency(item.quantity * item.price)}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {order.items.map((item) => (
-                  <tr key={item.sku} className="bg-white">
-                    <td className="px-4 py-4 font-medium text-slate-700">{item.sku}</td>
-                    <td className="px-4 py-4 text-slate-700">{item.name}</td>
-                    <td className="px-4 py-4 text-slate-600">{item.quantity}</td>
-                    <td className="px-4 py-4 text-slate-600">
-                      {formatCurrency(item.price)}
-                    </td>
-                    <td className="px-4 py-4 font-semibold text-slate-900">
-                      {formatCurrency(item.quantity * item.price)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-2">
+        <div className="xl:col-span-1">
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-950">Payment Details</h3>
+            <div className="mt-4 space-y-3 text-sm text-slate-600">
+              <PaymentRow label="Payment Type" value={formatPaymentType(order.payment_type)} />
+              <PaymentRow label="Payment Mode" value={order.payment_mode || '-'} />
+              <PaymentRow label="Paid Amount" value={formatCurrency(order.paid_amount)} />
+              <PaymentRow
+                label="Due Amount"
+                value={formatCurrency(order.due_amount)}
+                valueClassName="text-red-600"
+              />
+            </div>
           </div>
         </div>
-
-        <div className="space-y-6">
+        <div className="xl:col-span-1">
           <InfoCard
             title="Customer Details"
             lines={[
-              { icon: UserRound, text: order.customer },
-              { icon: Phone, text: order.phone },
-              { icon: Store, text: order.salesChannel },
+              { icon: UserRound, text: order.customer_details?.name || '-' },
+              { icon: Phone, text: order.customer_details?.mobile_number || '-' },
+              { icon: Store, text: order.customer_id || '-' },
             ]}
           />
+        <div className="mt-4">
           <InfoCard
-            title="Shipping Address"
+            title="Order Summary"
             lines={[
-              { icon: MapPin, text: order.shippingAddress },
+              { icon: MapPin, text: order.customer_details?.city || '-' },
               {
                 icon: CalendarDays,
-                text: `Placed on ${formatDate(order.placedOn)} | Delivery ${formatDate(order.deliveryDate)}`,
+                text: `Placed on ${formatDate(order.created_at)}`,
               },
             ]}
           />
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-950">Internal Note</h3>
-            <p className="mt-3 text-sm leading-6 text-slate-600">{order.notes}</p>
-          </div>
+        </div>
         </div>
       </section>
     </div>
@@ -169,20 +229,13 @@ function InfoCard({ title, lines }) {
   )
 }
 
-function Badge({ label, className }) {
+function PaymentRow({ label, value, valueClassName = 'text-slate-900' }) {
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${className}`}>
-      {label}
-    </span>
+    <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-4 py-3">
+      <span className="font-medium text-slate-500">{label}</span>
+      <span className={`font-semibold ${valueClassName}`}>{value}</span>
+    </div>
   )
-}
-
-function formatDate(value) {
-  return new Intl.DateTimeFormat('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value))
 }
 
 export default OrderView
